@@ -142,7 +142,7 @@ def _():
     g = 1.0  # Constante de gravité 
     M = 1.0  # Masse (kg)
     l = 2.0  # Longueur (en mètres)
-    return
+    return M, g, l
 
 
 @app.cell(hide_code=True)
@@ -217,6 +217,19 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Simple application de la deuxième loi de Newton. Les seules forces sont la gravité et le réacteur :
+
+    $$M\ddot{x} = f_x = -f\sin(\theta+\phi)$$
+    $$M\ddot{y} = f_y - Mg = f\cos(\theta+\phi) - Mg$$
+
+    Rien de complexe ici, mais on a vérifié le signe de la gravité (elle agit vers le bas), d'où $-Mg$ sur la composante $y$.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Moment of inertia
 
     Compute the [moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia) $J$ of the booster and define the corresponding Python variable `J`.
@@ -227,9 +240,55 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Le propulseur est une tige uniforme de longueur totale $\ell$ tournant autour de son centre. Formule classique :
+
+    $$J = \frac{M\ell^2}{12} $$
+
+    Numériquement :
+    """)
+    return
+
+
+@app.cell
+def _(M, l):
+    J = M * l**2 / 12.0
+    print(J)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Tilt
 
     Give the ordinary differential equation that governs the evolution of the tilt angle $\theta$.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On passe maintenant à la dynamique de rotation du système. Pour cela, on applique le Théorème du Moment Cinétique (TMC) au centre de masse (noté CM ou $O$) :
+    $$J\ddot{\theta} = \sum \mathcal{M}_{CM}(\vec{F}_{ext})$$
+
+    Le poids s'appliquant directement au centre de gravité, son moment est nul ($\mathcal{M}_{CM}(\vec{P}) = 0$). Il ne nous reste donc qu'à calculer le couple généré par la force du réacteur appliquée à la base du booster (qu'on note point $B$).
+
+    Le vecteur position de la base par rapport au centre de masse s'écrit :
+    $$\vec{OB} = \frac{\ell}{2} \begin{pmatrix} \sin(\theta) \\ -\cos(\theta) \end{pmatrix}_{(\vec{x},\vec{y})}$$
+
+    Le couple en 2D correspond à la composante sur l'axe $z$ du produit vectoriel $\vec{OB} \wedge \vec{f}$, soit $\tau = r_x f_y - r_y f_x$. En développant avec les composantes de la force trouvées précédemment :
+    $$\mathcal{M}_{CM}(\vec{f}) = \left(\frac{\ell}{2}\sin(\theta)\right) \left(f\cos(\theta+\phi)\right) - \left(-\frac{\ell}{2}\cos(\theta)\right) \left(-f\sin(\theta+\phi)\right)$$
+
+    On factorise par $\frac{\ell f}{2}$ :
+    $$\mathcal{M}_{CM}(\vec{f}) = \frac{\ell f}{2} \big[ \sin(\theta)\cos(\theta+\phi) - \cos(\theta)\sin(\theta+\phi) \big]$$
+
+    On reconnaît l'identité trigonométrique classique $\sin(a-b) = \sin(a)\cos(b) - \cos(a)\sin(b)$. Ce qui simplifie grandement l'expression :
+    $$\mathcal{M}_{CM}(\vec{f}) = \frac{\ell f}{2} \sin\big(\theta - (\theta+\phi)\big) = -\frac{f\ell}{2}\sin(\phi)$$
+
+    On obtient donc notre équation différentielle pour la rotation :
+    $$J\ddot{\theta} = -\frac{f\ell}{2}\sin(\phi)$$
+    *(Où $J = \frac{M\ell^2}{12}$).*
     """)
     return
 
@@ -254,6 +313,37 @@ def _(mo):
     \dot{s} = F(s, f, \phi).
     $$
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Nous avons 3 EDO du second ordre ($x$, $y$, $\theta$), soit $n = 6$ après conversion en premier ordre.
+
+    État : $s = (x, v_x, y, v_y, \theta, \omega)$ où $v_x = \dot{x}$, $v_y = \dot{y}$, $\omega = \dot{\theta}$.
+
+    $$\dot{s} = F(s, f, \phi) = \begin{pmatrix} v_x \\ -f\sin(\theta+\phi)/M \\ v_y \\ f\cos(\theta+\phi)/M - g \\ \omega \\ -lf\sin(\phi)/J \end{pmatrix}$$
+    """)
+    return
+
+
+@app.cell
+def _(M, fl, g, np):
+    def s(x, v_x, y, v_y, theta, w):
+        return [x, v_x, y, v_y, theta, w]
+
+    def F(s: list, f, phi):
+        x, v_x, y, v_y, theta, w = s
+        return [
+            v_x,
+            -f/M * np.sin(theta + phi),
+            v_y,
+            f/M * np.cos(theta + phi) - g,
+            w,
+            -fl/(2J) * np.sin(phi) 
+        ]
+
     return
 
 
