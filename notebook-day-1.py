@@ -483,6 +483,82 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Pour cet atterrissage contrôlé, on a préféré poser le problème analytiquement sur le papier. L'idée est de trouver une loi de commande affine pour la poussée : $f(t) = at + b$.
+
+    En isolant la dynamique sur l'axe vertical (et sachant que $M=1$ et $g=1$), le Principe Fondamental de la Dynamique nous donne :
+    $$\ddot{y} = at + b - 1$$
+
+    On intègre une première fois pour obtenir la vitesse. En sachant qu'à l'instant initial $t=0$, la fusée chute à $\dot{y}(0) = -2$ m/s, on trouve notre première constante d'intégration :
+    $$\dot{y}(t) = a\frac{t^2}{2} + bt - t - 2$$
+
+    On intègre une seconde fois pour la position. À $t=0$, l'altitude initiale est $y(0) = 10$ m. Ce qui nous donne :
+    $$y(t) = a\frac{t^3}{6} + b\frac{t^2}{2} - \frac{t^2}{2} - 2t + 10$$
+
+    L'objectif est d'atterrir en douceur à $t=5$ s. "En douceur" signifie deux choses :
+    1. **La vitesse doit être nulle :** $\dot{y}(5) = 0$
+    2. **Le booster doit toucher le sol :** $y(5) = \ell/2 = 1$ m
+
+    En injectant $t=5$ dans nos deux équations intégrées, on se retrouve avec un système linéaire classique de la forme $A \begin{pmatrix} a \\ b \end{pmatrix} = B$.
+
+    Après avoir isolé $a$ et $b$ à gauche, on obtient exactement la matrice $A$ et le vecteur $B$ implémentés dans le code ci-dessous :
+    - $A = \begin{pmatrix} 25/2 & 5 \\ 125/6 & 25/2 \end{pmatrix}$
+    - $B = \begin{pmatrix} 7.0 \\ 13.5 \end{pmatrix}$
+
+    Il ne reste plus qu'à laisser `numpy.linalg.solve` faire le travail ingrat de l'inversion matricielle pour extraire les coefficients $a$ et $b$, puis simuler la trajectoire.
+    """)
+    return
+
+
+@app.cell
+def _(l, np, plt, redstart_solve):
+    def controlled_landing():
+        t_span = [0.0, 5.0]
+        y0 = [0.0, 0.0, 10.0, -2.0, 0.0, 0.0]  # [x, vx, y, vy, theta, omega]
+
+        # Exact coefficients from the linear system
+        A_mat = np.array([[25/2, 5], [125/6, 25/2]])
+        rhs   = np.array([7.0, 13.5])
+        a, b  = np.linalg.solve(A_mat, rhs)
+
+        def f_phi(t, y):
+            return np.array([a * t + b, 0.0])     # [f, phi]
+
+        sol = redstart_solve(t_span, y0, f_phi)
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        y_t = sol(t)[2]
+        vy_t = sol(t)[3]
+
+        fig, axes = plt.subplots(1, 2, figsize=(14, 4))
+        ax = axes[0]
+    
+        ax.plot(t, y_t, label=r"$y(t)$ (height in meters)")
+        ax.plot(t, l * np.ones_like(t),   color="grey",   ls="--", label=r"$y = \ell = 2$ m")
+        ax.plot(t, l/2 * np.ones_like(t), color="crimson", ls="--", label=r"$y = \ell/2 = 1$ m (ground)")
+        ax.scatter([5], [l/2], color="crimson", zorder=5, label=rf"landing target $(t=5,\ y=1)$")
+        ax.set_title("Controlled Landing")
+        ax.set_xlabel("time $t$ (s)")
+        ax.set_ylabel("$y$ (m)")
+        ax.grid(True)
+        ax.legend()
+
+        ax = axes[1]
+        ax.plot(t, vy_t, color="seagreen", label=r"$\dot{y}(t)$")
+        ax.scatter([5], [0], color="crimson", zorder=5, label=r"target $\dot{y}(5)=0$")
+        ax.axhline(0, color="grey", ls="--")
+        ax.set_title(r"Vertical velocity $\dot{y}(t)$")
+        ax.set_xlabel("time $t$ (s)")
+        ax.set_ylabel(r"$\dot{y}$ (m/s)")
+        ax.legend(fontsize=8); ax.grid(True)
+
+        return plt.gcf()
+
+    controlled_landing()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     # Animations
 
     It's very handy to visualize the evolution of our booster "as a movie"!
