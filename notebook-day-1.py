@@ -71,7 +71,7 @@ def _():
     import numpy as np
     import numpy.linalg as la
 
-    return
+    return (np,)
 
 
 @app.cell(hide_code=True)
@@ -131,10 +131,76 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Pour commencer, on va définir les paramètres physiques du booster.
+    """)
+    return
+
+
+@app.cell
+def _():
+    # Constantes du modèle simplifié
+    g = 1.0  # Constante de gravité 
+    M = 1.0  # Masse (kg)
+    l = 2.0  # Longueur (en mètres)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Forces
 
     Compute the cartesian coordinates $f_x$ and $f_y$ of the force applied to the booster by the reactor, functions of $f$, $\theta$ and $\phi$.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Maintenant que le système est dimensionné, on passe au bilan des forces. L'unique force vient du réacteur situé à la base du booster.
+
+    La direction de cette force par rapport à la verticale dépend de deux paramètres $\theta$ et $\phi$.
+
+    Si on se place dans un repère global classique ($x$ vers la droite, $y
+    $ vers le haut) : des angles $\theta$ et $\phi$ positifs orientent la force de poussée vers le haut et vers la gauche. On doit donc appliquer un signe négatif à la composante horizontale $f_x$.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Pour justifier rigoureusement l'expression de la force de poussée $\vec{f}$, on effectue une projection depuis le repère local du booster $(x', y')$ vers le repère global $(x, y)$.
+
+    Dans le repère local $(x', y')$ lié au lanceur, la force de poussée s'exprime selon l'angle de braquage $\phi$ (avec une convention anti-horaire) :
+    $$\vec{f} = f \cos(\phi) \vec{y'} - f \sin(\phi) \vec{x'}$$
+
+    Ce qui nous donne le vecteur suivant dans la base locale :
+    $$\vec{f}_{(x',y')} = \begin{pmatrix} -f \sin(\phi) \\ f \cos(\phi) \end{pmatrix}$$
+
+    Sachant que le repère $(x', y')$ est obtenu par une rotation d'angle $\theta$ par rapport au repère global $(x, y)$, on exprime les vecteurs de la base locale $\vec{x'}$ et $\vec{y'}$ dans la base globale. On remplace ensuite dans notre expression initiale :
+    $$\vec{f} = f \cos(\phi) \begin{pmatrix} -\sin(\theta) \\ \cos(\theta) \end{pmatrix}_{(x,y)} - f \sin(\phi) \begin{pmatrix} \cos(\theta) \\ \sin(\theta) \end{pmatrix}_{(x,y)}$$
+
+    En regroupant les termes, on obtient le vecteur force dans le repère global :
+    $$\vec{f} = f \begin{pmatrix} -\sin(\theta)\cos(\phi) - \sin(\phi)\cos(\theta) \\ \cos(\theta)\cos(\phi) - \sin(\theta)\sin(\phi) \end{pmatrix}$$
+
+    Enfin, en appliquant les formules d'addition trigonométriques classiques ($\sin(a+b)$ et $\cos(a+b)$), on retombe bien sur l'expression simplifiée de notre force :
+    $$\vec{f} = -f \sin(\theta + \phi) \vec{x} + f \cos(\theta + \phi) \vec{y}$$
+
+    On implémente donc ces composantes $f_x$ et $f_y$ sous forme de variables symboliques pour la suite de la modélisation.
+    """)
+    return
+
+
+@app.cell
+def _(np):
+    def f_x(f, theta, phi):
+        return -f*np.sin(theta+phi)
+
+    def f_y(f, theta, phi):
+        return f*np.cos(theta+phi)
+
     return
 
 
