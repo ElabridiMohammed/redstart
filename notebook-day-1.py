@@ -574,7 +574,7 @@ def _(mo):
 def _():
     from svg import svg, transform, animate_transform
 
-    return
+    return animate_transform, svg, transform
 
 
 @app.cell(hide_code=True)
@@ -634,6 +634,69 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    La fonction world configure la scène SVG.
+
+    La partie délicate est l'inversion de l'axe $y$ : SVG a l'axe  $y$ pointant vers le bas, mais on veut des coordonnées cartésiennes (y vers le haut).
+
+    On gère cela avec un $scale(1, -1)$ dans un groupe translaté.
+    """)
+    return
+
+
+@app.cell
+def _(svg, transform):
+    def world(view_box, *objects):
+        x_min, x_max, y_min, y_max = view_box
+        w = x_max - x_min
+        h = y_max - y_min
+        sky    = svg.rect(x=x_min, y=y_min, width=w, height=h,      fill="lightskyblue")
+        ground = svg.rect(x=x_min, y=y_min, width=w,
+                          height=(-y_min if y_min < 0 else h - y_max), fill="sienna")
+        pad    = svg.rect(x=-1, y=-0.1, width=2, height=0.1,         fill="green")
+        content = transform.translate(x=-x_min, y=y_max)(
+            transform.scale(x=1, y=-1)(
+                sky, ground, pad, *objects
+            )
+        )
+        return str(svg.svg(viewBox=f"0 0 {w} {h}", xmlns="http://www.w3.org/2000/svg")(content))
+
+    return (world,)
+
+
+@app.cell
+def _(mo, svg, world):
+    mo.hstack(
+        [
+            # Display an empty world
+            mo.Html(
+                world([-3, 3, -2, 4])
+            ),
+            # Display a world with a black square on top of the landing pad
+            mo.Html(
+                world(
+                    [-3, 3, -2, 4],
+                    svg.rect(x=-1, y=0, width=2, height=2, fill="black"),
+                )
+            ),
+            # Display a world with a red square in the top-left corner of the view box
+            # and a blue square on the top-right corner of the view box.
+            mo.Html(
+                world(
+                    [-3, 3, -2, 4],
+                    svg.rect(x=-3, y=2, width=2, height=2, fill="red"),
+                    svg.rect(x=1, y=2, width=2, height=2, fill="blue"),
+                )
+            )
+        ],
+        justify="space-around"
+    )
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Booster Drawing
 
     Create a `booster` function that:
@@ -680,6 +743,68 @@ def _(mo):
     )
     ```
     """)
+    return
+
+
+@app.cell
+def _(M, g, l, np, svg, transform):
+    def booster(x, y, theta, f, phi):
+        body_w = 0.15
+        body_h = l
+        flame_scale = l / (2 * M * g)  # flame_len = l/2 when f = Mg
+        flame_len = f * flame_scale
+    
+        body = svg.rect(x=-body_w/2, y=0, width=body_w, height=body_h, fill="gray")
+    
+        flame_group = ""
+    
+        if flame_len > 0:
+        
+            flame = svg.rect(x=-body_w/2, y=-flame_len, width=body_w, height=flame_len, fill="orange")
+        
+            flame_group = str(transform.rotate(a=-np.degrees(phi), x=0, y=0)(flame))
+    
+        deg = -np.degrees(theta)
+    
+        return str(
+            transform.translate(x=x, y=y)(
+                transform.rotate(a=deg, x=0, y=0)(
+                    transform.translate(x=0, y=-l/2)(
+                        body, flame_group
+                    )
+                )
+            )
+        )
+
+    return (booster,)
+
+
+@app.cell
+def _(M, booster, g, l, mo, np, world):
+    mo.hstack(
+        [
+            mo.Html(
+                world(
+                    [-3, 3, -2, 4],
+                    booster(0, l/2, 0, 0, 0),
+                )
+            ),
+            mo.Html(
+                world(
+                    [-3, 3, -2, 4],
+                    booster(0, l, 0, M * g, 0),
+                )
+            ),
+            mo.Html(
+                world(
+                    [-3, 3, -2, 4],
+                    booster(-l/2, l, np.pi / 4, 2 * M * g, np.pi / 2),
+                )
+            ),
+        ],
+        justify="space-around",
+    )
+
     return
 
 
@@ -730,6 +855,55 @@ def _(mo):
     return
 
 
+@app.cell
+def _(M, animate_transform, g, l, np, svg):
+    def booster_anim(x_fn, y_fn, theta_fn, f_fn, phi_fn, T=5.0):
+        body_w = 0.15
+        body_h = l
+        flame_scale = l / (2 * M * g)
+        body = svg.rect(x=-body_w/2, y=0, width=body_w, height=body_h, fill="gray")
+        flame_base = svg.rect(x=-body_w/2, y=-1, width=body_w, height=1, fill="orange")
+        animated_flame = animate_transform.scale(
+            x=1,
+            y=lambda t: f_fn(t) * flame_scale,
+            T=T
+        )(
+            animate_transform.rotate(
+                a=lambda t: -np.degrees(phi_fn(t)),
+                T=T
+            )(flame_base)
+        )
+        inner = animate_transform.translate(x=0, y=lambda t: -l, T=T)(body, animated_flame)
+        rotated = animate_transform.rotate(a=lambda t: -np.degrees(theta_fn(t)), T=T)(inner)
+        positioned = animate_transform.translate(x=x_fn, y=y_fn, T=T)(rotated)
+        return str(positioned)
+
+    return (booster_anim,)
+
+
+@app.cell
+def _(M, booster_anim, g, l, mo, np, world):
+    def booster_anim_0():
+        T = 5.0
+        def x(t):
+            return -l/2 + l * (t / T)
+        def y(t):
+            return l/2 + l/2 * (t / T)
+        def theta(t):
+            return (t / T) * 2 * np.pi
+        def f(t):
+            return M * g * (t / T)
+        def phi(t):
+            return 2 * np.pi * (t / T)
+        return booster_anim(x, y, theta, f, phi, T=T)
+
+    mo.Html(
+        world([-3, 3, -2, 4], booster_anim_0())
+    ).center()
+
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -745,6 +919,68 @@ def _(mo):
 
     4. The "controlled landing" scenario (see above).
     """)
+    return
+
+
+@app.cell
+def _(booster_anim, l, np, plt, redstart_solve):
+    def make_anim(y0, f_val, phi_val, T=5.0):
+        def f_phi_const(t, y):
+            return np.array([f_val, phi_val])
+    
+        sol = redstart_solve([0.0, T], y0, f_phi_const)
+        return booster_anim(
+            lambda t: sol(t)[0], lambda t: sol(t)[2] + 1,
+            lambda t: sol(t)[4], lambda t: f_val,
+            lambda t: phi_val, T=T
+        )
+    
+    y0_std = [0.0, 0.0, 10.0, -2.0, 0.0, 0.0]
+
+    A_mat = np.array([[25/2, 5], [125/6, 25/2]])
+    rhs   = np.array([7.0, 13.5])
+    a, b  = np.linalg.solve(A_mat, rhs)
+
+    # scenario 4: controlled landing
+    def f_phi_land(t, y):
+        return np.array([a*t + b, 0.0])
+
+    sol_l = redstart_solve([0,5], [0,0,10,-2,0,0], f_phi_land)
+
+    t = np.linspace(0, 8, 1000)
+
+    y_t = sol_l(t)[2]
+    plt.plot(t, y_t, label=r"$y(t)$ (height in meters)")
+    plt.plot(t, l/2 * np.ones_like(t), color="grey", ls="--", label=r"$y=\ell$")
+    plt.title("Free Fall")
+    plt.xlabel("time $t$")
+    plt.grid(True)
+    plt.legend()
+    plt.gcf()
+    return a, b, make_anim, sol_l, y0_std
+
+
+@app.cell
+def _(M, a, b, booster_anim, g, l, make_anim, mo, np, sol_l, world, y0_std):
+    anim4 = booster_anim(
+        lambda t: sol_l(t)[0], lambda t: sol_l(t)[2] + l/2,
+        lambda t: sol_l(t)[4], lambda t: a*t + b,
+        lambda t: 0.0, T=5.0
+    )
+
+    mo.md("### Animated scenarios 1–4")
+    vb = [-5, 5, -2, 12]
+    mo.hstack([
+        mo.Html(world(vb, make_anim(y0_std, 0, 0))),
+        mo.Html(world(vb, make_anim(y0_std, M*g, 0))),
+        mo.Html(world(vb, make_anim(y0_std, M*g, np.pi/8))),
+        mo.Html(world(vb, anim4)),
+    ], justify="space-around")
+    return
+
+
+@app.cell
+def _():
     return
 
 
