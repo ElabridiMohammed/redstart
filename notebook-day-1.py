@@ -71,7 +71,7 @@ def _():
     import numpy as np
     import numpy.linalg as la
 
-    return (np,)
+    return np, plt
 
 
 @app.cell(hide_code=True)
@@ -201,7 +201,7 @@ def _(np):
     def f_y(f, theta, phi):
         return f*np.cos(theta+phi)
 
-    return
+    return f_x, f_y
 
 
 @app.cell(hide_code=True)
@@ -253,7 +253,7 @@ def _(mo):
 def _(M, l):
     J = M * l**2 / 12.0
     print(J)
-    return
+    return (J,)
 
 
 @app.cell(hide_code=True)
@@ -329,22 +329,22 @@ def _(mo):
 
 
 @app.cell
-def _(M, fl, g, np):
-    def s(x, v_x, y, v_y, theta, w):
-        return [x, v_x, y, v_y, theta, w]
+def _(J, M, f_x, f_y, g, l, np):
+    def s(x, v_x, y, v_y, theta, omega):
+        return [x, v_x, y, v_y, theta, omega]
 
     def F(s: list, f, phi):
-        x, v_x, y, v_y, theta, w = s
+        x, v_x, y, v_y, theta, omega = s
         return [
             v_x,
-            -f/M * np.sin(theta + phi),
+            f_x(f, theta, phi)/M,
             v_y,
-            f/M * np.cos(theta + phi) - g,
-            w,
-            -fl/(2J) * np.sin(phi) 
+            f_y(f, theta, phi)/M - g,
+            omega,                 
+            -f*l/(2*J) * np.sin(phi) 
         ]
 
-    return
+    return (F,)
 
 
 @app.cell(hide_code=True)
@@ -387,6 +387,33 @@ def _(mo):
     return
 
 
+@app.cell
+def _(F):
+    from scipy.integrate import solve_ivp
+
+    def redstart_solve(t_span, y0, f_phi):
+        def dynamics(t, y):
+            f, phi = f_phi(t, y)
+            return F(y, f, phi)
+    
+        result = solve_ivp(
+            dynamics,
+            t_span,
+            y0,
+            method="RK45",
+            dense_output=True,
+            rtol=1e-9,
+            atol=1e-9,
+        )
+    
+        def sol(t):
+            return result.sol(t)
+    
+        return sol
+
+    return (redstart_solve,)
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -398,6 +425,44 @@ def _(mo):
 
     Check your `redstart_solve` function in this scenario and produce a graph that allows us to check the above answer numerically/visually.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Avec $f = 0$, pas de poussée, chute libre pure. Le mouvement vertical est simplement :
+
+    $$y(t) = y_0 - \frac{g}{2}t^2 = 10 - \frac{t^2}{2}$$
+
+    On veut $y(t^*) = \ell = 2$ :
+
+    $$10 - \frac{t^{*2}}{2} = 2 \implies t^{*2} = 16 \implies t^* = 4 \text{ s}$$
+
+    Vérifions avec la simulation :
+    """)
+    return
+
+
+@app.cell
+def _(l, np, plt, redstart_solve):
+    def free_fall_example():
+        t_span = [0.0, 5.0]
+        y0 = [0.0, 0.0, 10.0, 0.0, 0.0, 0.0] # [x, vx, y, vy, theta, omega]
+        def f_phi(t, y):
+            return np.array([0.0, 0.0]) # [f, phi]
+        sol = redstart_solve(t_span, y0, f_phi)
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        y_t = sol(t)[2]
+        plt.plot(t, y_t, label=r"$y(t)$ (height in meters)")
+        plt.plot(t, l * np.ones_like(t), color="grey", ls="--", label=r"$y=\ell$")
+        plt.title("Free Fall")
+        plt.xlabel("time $t$")
+        plt.grid(True)
+        plt.legend()
+        return plt.gcf()
+    free_fall_example()
+
     return
 
 
