@@ -1258,7 +1258,34 @@ def _(mo):
 
     Ici, $\text{Re}(\lambda_i) = 0$ pour toutes les valeurs propres. Le système **n'est pas asymptotiquement stable**.
 
-    Physiquement, c'est assez intuitif : sans aucun contrôle ($\Delta f = 0$, $\Delta\phi = 0$), le booster est en chute libre. Une petite perturbation de vitesse entraîne un déplacement qui croît linéairement, une perturbation d'accélération entraîne un déplacement quadratique... le système dérive sans jamais revenir.
+    Physiquement, c'est assez intuitif : sans aucun contrôle ($\Delta f = 0$, $\Delta\phi = 0$), le booster est en chute libre. Une petite perturbation de vitesse entraîne un déplacement qui croît linéairement... le système dérive sans jamais revenir.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Imagine qu'on perturbe légèrement le booster autour de son point d'équilibre. Sans contrôleur pour corriger le tir, voici ce que nos équations linéarisées prédisent du comportement "naturel" du système :
+
+    **1. Perturbation de la vitesse horizontale ($\Delta\dot{x}$)** :
+
+
+    À l'équilibre parfait, on sait que $\Delta\theta = 0$ et $\Delta\phi = 0$. Notre équation de la dynamique latérale $\Delta\ddot{x} = -g(\Delta\theta + \Delta\phi)$ se réduit donc à :
+    $$\Delta\ddot{x} = 0 \implies \Delta\dot{x}(t) = \text{constante} = \Delta\dot{x}(0)$$
+    Ce qui nous donne, en intégrant pour la position :
+    $$\Delta x(t) = \Delta x(0) + \Delta\dot{x}(0) \cdot t$$
+    *Bilan physique :* Si le lanceur subit une petite pichenette latérale (un coup de vent par exemple), il va se mettre à dériver horizontalement à vitesse constante, indéfiniment. Il ne reviendra jamais de lui-même à sa position d'origine, car la matrice $A$ ne contient aucune force de rappel sur $x$.
+
+    **2. Perturbation de la vitesse verticale ($\Delta\dot{y}$)** :
+    Même punition sur l'axe vertical.
+
+    **3. Perturbation de l'inclinaison ($\Delta\theta$)** :
+
+
+    C'est la perturbation la plus critique. Si le booster s'incline légèrement ($\Delta\theta \neq 0$), alors la gravité commence à tirer le centre de masse hors de l'axe :
+    $$\Delta\ddot{x} = -g\Delta\theta$$
+    Le lanceur va donc commencer à accélérer horizontalement dans le sens de son inclinaison. Le système est instable en boucle ouverte. C'est exactement pour ça qu'on va devoir concevoir une loi de commande robuste !
     """)
     return
 
@@ -1324,6 +1351,14 @@ def _(A_full, B_full, la, np):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Le rang vaut 6 = $n$ donc le système est commandable. On peut donc concevoir un retour d'état $u = -K\Delta s$ qui place les pôles de la boucle fermée où on veut.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Lateral Dynamics
 
     We limit our interest in the lateral position $x$, the tilt $\theta$ and their derivatives (we are for the moment fine with letting $y$ and $\dot{y}$ be uncontrolled). We also set $f = M g$ and control the system only with $\phi$.
@@ -1331,6 +1366,77 @@ def _(mo):
     - What are the new (reduced) matrices $A$ and $B$ for this reduced system?
 
     - Check the controllability of this new system.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On fixe $f = Mg$ et on ne s'intéresse qu'aux variables latérales $(\Delta x, \Delta v_x, \Delta\theta, \Delta\omega)$ :
+
+    Les équations linéarisées deviennent :
+    - $\dot{\Delta x} = \Delta v_x$
+    - $\dot{\Delta v_x} = -g\Delta\theta - g\Delta\phi = -\Delta\theta - \Delta\phi$
+    - $\dot{\Delta\theta} = \Delta\omega$
+    - $\dot{\Delta\omega} = -3\Delta\phi$
+
+    En forme matricielle :
+    $$X_{lat} = \begin{bmatrix} \Delta x \\ \Delta\dot{x} \\ \Delta\theta \\ \Delta\dot{\theta} \end{bmatrix}, \qquad U_{lat} = \Delta\phi$$
+
+    En extrayant les lignes/colonnes correspondantes du système complet, les équations linéarisées deviennent :
+
+    $$\Delta\ddot{x} = -g(\Delta\theta + \Delta\phi)$$
+    $$\Delta\ddot{\theta} = -\frac{Mg\ell}{2J}\Delta\phi$$
+
+    #### Nouvelles matrices $A$ et $B$
+
+    $$\dot{X}_{lat} = A_{lat} X_{lat} + B_{lat} U_{lat}$$
+
+    $$A_{lat} = \begin{pmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & -g & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}, \qquad B_{lat} = \begin{pmatrix} 0 \\ -g \\ 0 \\ -\dfrac{Mg\ell}{2J} \end{pmatrix}$$
+    """)
+    return
+
+
+@app.cell
+def _(J, M, g, l, np):
+    A_lat = np.array([
+        [0, 1, 0, 0],
+        [0, 0, -g, 0],
+        [0, 0, 0, 1],
+        [0, 0, 0, 0],
+    ])
+
+    B_lat = np.array([
+        [0],
+        [-g],
+        [0],
+        [-M*g*l/ (2*J)],
+    ])
+
+    # Matrice de contrôlabilité :
+    C_lat = np.hstack([np.linalg.matrix_power(A_lat, i) @ B_lat for i in range(4)])
+
+    print("Matrice de contrôlabilité :")
+    print(C_lat)
+    print(f"\nRang : {np.linalg.matrix_rank(C_lat)}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Résultat
+
+    $$\boxed{\text{rank}(\mathcal{C}_{lat}) = 4 = n}$$
+
+    **Le système latéral réduit est contrôlable.**
+
+    Avec une seule entrée $\Delta\phi$, on peut tout contrôler car les effets se propagent en cascade :
+
+    $$\Delta\phi \longrightarrow \Delta\ddot{\theta} \longrightarrow \Delta\theta \longrightarrow \Delta\ddot{x} \longrightarrow \Delta x$$
+
+    Incliner le moteur fait pivoter le booster, ce qui crée une force horizontale, ce qui déplace $x$. Un seul actionneur suffit à atteindre les 4 états.
     """)
     return
 
@@ -1346,6 +1452,11 @@ def _(mo):
 
     What do you see? How do you explain it?
     """)
+    return
+
+
+@app.cell
+def _():
     return
 
 
