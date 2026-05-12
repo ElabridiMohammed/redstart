@@ -1545,6 +1545,102 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    On cherche $K = [0, 0, k_3, k_4]$, donc $\Delta\phi = -k_3\Delta\theta - k_4\Delta\omega$. On ne contrôle que l'angle, on accepte que $x$ dérive.
+
+    En injectant dans l'équation angulaire :
+    $$\Delta\ddot{\theta} = -3\Delta\phi = -3(-k_3\Delta\theta - k_4\Delta\omega) = 3k_3\Delta\theta + 3k_4\Delta\omega$$
+
+    Le sous-système $(\Delta\theta, \Delta\omega)$ en boucle fermée est :
+    $$\frac{d}{dt}\begin{pmatrix}\Delta\theta \\ \Delta\omega\end{pmatrix} = \underbrace{\begin{pmatrix} 0 & 1 \\ 3k_3 & 3k_4\end{pmatrix}}_{A_{cl}}\begin{pmatrix}\Delta\theta \\ \Delta\omega\end{pmatrix}$$
+
+    Le polynôme caractéristique de $A_{cl}$ :
+    $$\det(A_{cl} - \lambda I) = \det\begin{pmatrix} -\lambda & 1 \\ 3k_3 & 3k_4 - \lambda\end{pmatrix} = \lambda^2 - 3k_4\lambda - 3k_3 = 0$$
+
+    Pour que le système soit stable, il faut les deux racines à partie réelle négative. Par les formules de Viète :
+    - Somme des racines : $\lambda_1 + \lambda_2 = 3k_4$ → il faut $k_4 < 0$
+    - Produit des racines : $\lambda_1 \cdot \lambda_2 = -3k_3$ → pour un produit positif (deux racines négatives), il faut $k_3 < 0$
+
+    Si on veut deux pôles réels identiques à $-\sigma$ (temps de convergence $\sim 4/\sigma$) :
+    - $-2\sigma = 3k_4$ → $k_4 = -2\sigma/3$
+    - $\sigma^2 = -3k_3$ → $k_3 = -\sigma^2/3$
+
+    Avec $\sigma = 0.2$ (convergence en ~20s puisque $4/0.2 = 20$) :
+    $$k_3 = -0.04/3 \approx -0.0133, \quad k_4 = -0.4/3 \approx -0.133$$
+
+    On simule, on vérifie que $|\theta(t)| < \pi/2$ et $|\phi(t)| < \pi/2$, et on ajuste si ça dépasse.
+
+    **Note :** la boucle fermée complète (4×4) aura 2 pôles à $-\sigma$ (les pôles angulaires qu'on a placés) et 2 pôles à 0 (les pôles de $x$ qu'on n'a pas touchés). Donc le système complet n'est **pas** asymptotiquement stable (drift sur $x$), mais l'énoncé dit que c'est OK.
+    """)
+    return
+
+
+@app.cell
+def _(A_lat, B_lat, J, M, g, l, np, plt):
+    from scipy.integrate import solve_ivp
+    X0 = [0, 0, np.pi/4, 0]
+
+    def _():
+        alpha = M * g * l / (2 * J)  # = 3.0
+        t_span = [0, 40]
+        t = np.linspace(0, 40, 5000)
+        gains = [
+            (-0.013, -0.13),
+            (-0.02, -0.2),
+            (-0.04, -0.4),
+            (-1, -10),
+        ]
+
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+
+        for k_th, k_dth in gains:
+            K = np.array([0, 0, k_th, k_dth])
+            label = f"k_th={k_th}, k_dth={k_dth}"
+            def closed_loop(t, X):
+                delta_phi = -K @ X
+                u = np.array([[delta_phi]])
+                return (A_lat @ X.reshape(-1,1) + B_lat * delta_phi).flatten()
+
+            sol = solve_ivp(closed_loop, t_span, X0, dense_output=True,
+                            rtol=1e-10, atol=1e-10)
+            X_t = sol.sol(t)
+            x_t     = X_t[0]
+            theta_t = X_t[2]
+            phi_t   = -(K[2]*X_t[2] + K[3]*X_t[3])
+
+            axes[0].plot(t, np.degrees(theta_t), label=label)
+            axes[1].plot(t, np.degrees(phi_t),   label=label)
+            axes[2].plot(t, x_t,                 label=label)
+
+        # Contraintes
+        for ax in axes[:2]:
+            ax.axhline( 90, color="grey", ls=":", lw=1, label=r"$\pm 90°$ limite")
+            ax.axhline(-90, color="grey", ls=":", lw=1)
+
+        axes[0].axhline(0, color="black", ls="--", lw=0.8)
+        axes[0].set_title(r"$\Delta\theta(t)$")
+        axes[0].set_xlabel("temps (s)"); axes[0].set_ylabel("degrés")
+        axes[0].legend(fontsize=7); axes[0].grid(True)
+
+        axes[1].set_title(r"$\Delta\phi(t)$")
+        axes[1].set_xlabel("temps (s)"); axes[1].set_ylabel("degrés")
+        axes[1].legend(fontsize=7); axes[1].grid(True)
+
+        axes[2].set_title(r"$\Delta x(t)$")
+        axes[2].set_xlabel("temps (s)"); axes[2].set_ylabel("m")
+        axes[2].legend(fontsize=7); axes[2].grid(True)
+
+        plt.suptitle("Contrôleur manuel — itérations sur les gains", fontsize=12)
+        plt.tight_layout()
+        return plt.show()
+
+
+    _()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Controller Tuned with Pole Assignment
 
     Using pole assignement, find a matrix
