@@ -1087,6 +1087,41 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Un système est à l'équilibre si et seulement si toutes ses accélérations sont parfaitement nulles. On pose donc logiquement $\ddot{x} = 0$, $\ddot{y} = 0$ et $\ddot{\theta} = 0$ à partir de nos équations du mouvement, et on résout le système.
+
+    **1. Équilibre sur l'axe horizontal ($x$) :**
+    L'équation nous donne :
+    $$M\ddot{x} = -f\sin(\theta+\phi) = 0$$
+    On a $f > 0$. Par conséquent, c'est le terme en sinus qui doit s'annuler, soit $\sin(\theta+\phi) = 0$.
+    Sachant que les angles sont physiquement contraints par $|\theta| < \pi/2$ et $|\phi| < \pi/2$, on a l'encadrement $-\pi < \theta+\phi < \pi$. Sur cet intervalle, la seule solution possible pour annuler le sinus est :
+    $$\theta + \phi = 0$$
+
+    **2. Équilibre sur l'axe vertical ($y$) :**
+    On passe à l'altitude :
+    $$M\ddot{y} = f\cos(\theta+\phi) - Mg = 0$$
+    Puisque l'on vient de démontrer que $\theta + \phi = 0$, le cosinus vaut tout simplement 1. L'équation se simplifie de manière triviale :
+    $$f = Mg$$
+    La physique est bien faite : pour ne pas tomber, la poussée doit exactement compenser le poids du lanceur.
+
+    **3. Équilibre en rotation ($\theta$) :**
+    Enfin, pour éviter que le booster ne se mette à tournoyer sur lui-même :
+    $$J\ddot{\theta} = -\frac{f\ell}{2}\sin(\phi) = 0$$
+    Comme $f = Mg > 0$ et que $\ell$ est une longueur non nulle, c'est obligatoirement $\sin(\phi)$ qui s'annule. Avec la contrainte $|\phi| < \pi/2$, on en déduit directement :
+    $$\phi = 0$$
+    Et comme on avait établi plus haut que $\theta + \phi = 0$, on trouve inévitablement $\theta = 0$.
+
+    **Conclusion sur l'état d'équilibre :**
+    Sans grande surprise, la seule configuration permettant un vol stationnaire (Hovering) correspond à un lanceur parfaitement vertical, sans braquage de la tuyère, avec une poussée égale à son poids. L'unique point d'équilibre $(x_e, y_e, \theta_e, f_e, \phi_e)$ est donc caractérisé par :
+
+    $$f = Mg \quad ; \quad \theta = 0 \quad ; \quad \phi = 0$$
+    *(Note : les positions $x$ et $y$ peuvent être quelconques, le système est invariant par translation spatiale).*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Linearized Model
 
     Introduce the error variables $\Delta x$, $\Delta y$, $\Delta \theta$, and $\Delta f$ and $\Delta \phi$ of the state and input values with respect to the generic equilibrium configuration.
