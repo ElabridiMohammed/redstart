@@ -71,7 +71,7 @@ def _():
     import numpy as np
     import numpy.linalg as la
 
-    return la, np, plt, scipy
+    return la, np, plt, sci, scipy
 
 
 @app.cell(hide_code=True)
@@ -1420,7 +1420,7 @@ def _(J, M, g, l, np):
     print("Matrice de contrôlabilité :")
     print(C_lat)
     print(f"\nRang : {np.linalg.matrix_rank(C_lat)}")
-    return
+    return A_lat, B_lat
 
 
 @app.cell(hide_code=True)
@@ -1455,8 +1455,49 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Avec $\Delta\phi = 0$ (pas de contrôle), les équations se simplifient :
+
+    1. $\dot{\Delta\omega} = -3 \times 0 = 0$ → $\Delta\omega(t) = \Delta\omega(0) = 0$ (pas de couple = pas d'accélération angulaire)
+    2. $\dot{\Delta\theta} = \Delta\omega = 0$ → $\Delta\theta(t) = \Delta\theta(0) = \pi/4$ (l'angle ne bouge pas)
+    3. $\dot{\Delta v_x} = -\Delta\theta = -\pi/4$ → $\Delta v_x(t) = -(\pi/4) \cdot t$ (accélération horizontale constante)
+    4. $\dot{\Delta x} = \Delta v_x$ → $\Delta x(t) = -(\pi/4) \cdot t^2/2$ (dérive quadratique)
+    """)
+    return
+
+
 @app.cell
-def _():
+def _(A_lat, B_lat, np, plt, sci):
+    def sim_linear_lat(A, B, x0, K_ctrl, t_span, t_eval):
+        def rhs(t, x):
+            u = -K_ctrl @ x
+            return (A @ x + B @ u).flatten()
+        r = sci.solve_ivp(rhs, t_span, x0, t_eval=t_eval, rtol=1e-10, atol=1e-10)
+        return r.t, r.y
+
+    t_eval = np.linspace(0, 20, 1000)
+    x0_ff = [0.0, 0.0, np.pi/4, 0.0]  
+    K_zero = np.zeros((1, 4))
+
+    t_ff, y_ff = sim_linear_lat(A_lat, B_lat, x0_ff, K_zero, [0, 20], t_eval)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    axes[0].plot(t_ff, y_ff[0]); axes[0].set_title(r"$\Delta x(t)$"); axes[0].grid(True)
+    axes[0].set_xlabel("t (s)")
+    axes[1].plot(t_ff, y_ff[2]); axes[1].set_title(r"$\Delta	heta(t)$"); axes[1].grid(True)
+    axes[1].set_xlabel("t (s)")
+    plt.tight_layout()
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    C'est assez logique quand on y pense : le booster est penché à 45°, la composante horizontale de la gravité le pousse de côté, mais personne ne corrige l'angle. Du coup l'angle reste figé et la position dérive de plus en plus vite.
+    """)
     return
 
 
