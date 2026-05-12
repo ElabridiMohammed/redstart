@@ -1181,6 +1181,55 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    On commence par définir notre vecteur d'état $\Delta s$ (qui regroupe les positions et leurs dérivées) et notre vecteur d'entrée $u$ (nos commandes) :
+    $$\Delta s = \begin{pmatrix} \Delta x \\ \Delta v_x \\ \Delta y \\ \Delta v_y \\ \Delta\theta \\ \Delta\omega \end{pmatrix} \quad \text{et} \quad u = \begin{pmatrix} \Delta f \\ \Delta\phi \end{pmatrix}$$
+
+    En extrayant les coefficients de nos équations différentielles précédentes, on sépare la dynamique interne (Matrice $A$, $6 \times 6$) de l'impact des commandes (Matrice $B$, $6 \times 2$).
+
+    **La matrice de dynamique $A$ :**
+    On traduit simplement le fait que la dérivée d'une position est sa vitesse (les $1$), et on place notre seul terme de couplage interne (l'influence de $\theta$ sur l'accélération horizontale $\ddot{x}$) :
+    $$A = \begin{pmatrix} 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & -g & 0 \\ 0 & 0 & 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 & 0 & 0 \end{pmatrix}$$
+
+    **La matrice de commande $B$ :**
+    Elle map nos deux entrées ($\Delta f$ et $\Delta\phi$) sur les accélérations correspondantes. On retrouve bien le couplage de $\Delta\phi$ sur $\ddot{x}$ et le couple de rappel angulaire sur $\ddot{\theta}$ :
+    $$ B = \begin{pmatrix} 0 & 0 \\ 0 & -g \\ 0 & 0 \\ 1/M & 0 \\ 0 & 0 \\ 0 & -Mg \cdot l/(2J) \end{pmatrix}$$
+
+    **Note :**
+    Si on remplace avec nos valeurs numériques ($M=1$, $g=1$, $\ell=2$), le moment d'inertie du cylindre vaut $J = \frac{M\ell^2}{12} = \frac{1}{3}$.
+    Le coefficient $B_{5,1}$ (accélération angulaire) devient donc $-\frac{1 \cdot 1 \cdot 2}{2 \cdot (1/3)} = -3$. C'est physiquement cohérent.
+    """)
+    return
+
+
+@app.cell
+def _(J, M, g, l, np):
+    # Matrices A et B du système linéarisé complet (6x6, 6x2)
+    A_full = np.array([
+        [0, 1, 0, 0, 0,  0],
+        [0, 0, 0, 0, -g, 0],
+        [0, 0, 0, 1, 0,  0],
+        [0, 0, 0, 0, 0,  0],
+        [0, 0, 0, 0, 0,  1],
+        [0, 0, 0, 0, 0,  0],
+    ], dtype=float)
+
+    B_full = np.array([
+        [0,      0],
+        [0,      -g],
+        [0,       0],
+        [1/M,     0],
+        [0,       0],
+        [0, -M*g*l/(2*J)],
+    ], dtype=float)
+
+    print("A ="); print(A_full)
+    print("\nB ="); print(B_full)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Stability
 
     Is the generic equilibrium asymptotically stable?
