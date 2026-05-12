@@ -1750,6 +1750,11 @@ def _(A_lat, B_lat, la, np, plt, sim_linear_lat):
     return
 
 
+@app.cell
+def _():
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -1779,74 +1784,6 @@ def _(mo):
     Et le gain optimal est $K_{oc} = R^{-1}B^TP$..
 
     On commence avec $Q = \text{diag}(1, 1, 10, 1)$ et $R = 100$, puis on ajuste.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    Let the gain vector be defined as:
-
-    $$
-    K = [0,\;0,\;k_3,\;k_4]
-    $$
-
-    The control law is given by:
-
-    $$
-    \Delta \phi = -k_3 \Delta \theta - k_4 \Delta \dot{\theta}
-    $$
-
-    Substituting this expression into the system dynamics:
-
-    $$
-    \Delta \ddot{\theta} = -\alpha \Delta \phi
-    $$
-
-    We obtain:
-
-    $$
-    \Delta \ddot{\theta} = -\alpha(-k_3 \Delta \theta - k_4 \Delta \dot{\theta})
-    $$
-
-    $$
-    \Delta \ddot{\theta} = \alpha k_3 \Delta \theta + \alpha k_4 \Delta \dot{\theta}
-    $$
-
-    ### Characteristic Polynomial
-
-    The associated characteristic polynomial is:
-
-    $$
-    s^2 - \alpha k_4 s - \alpha k_3 = 0
-    $$
-
-    ### Stability Condition
-
-    For a second-order system of the form:
-
-    $$
-    s^2 + a_1 s + a_0
-    $$
-
-    Stability requires:
-
-    $$
-    a_1 > 0 \quad \text{and} \quad a_0 > 0
-    $$
-
-    In our case, we identify:
-
-    $$
-    a_1 = -\alpha k_4, \quad a_0 = -\alpha k_3
-    $$
-
-    Therefore, assuming $\alpha > 0$, the stability conditions become:
-
-    $$
-    k_3 < 0, \quad k_4 < 0
-    $$
     """)
     return
 
