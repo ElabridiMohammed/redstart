@@ -71,7 +71,7 @@ def _():
     import numpy as np
     import numpy.linalg as la
 
-    return np, plt, scipy
+    return la, np, plt, scipy
 
 
 @app.cell(hide_code=True)
@@ -1224,7 +1224,7 @@ def _(J, M, g, l, np):
 
     print("A ="); print(A_full)
     print("\nB ="); print(B_full)
-    return
+    return A_full, B_full
 
 
 @app.cell(hide_code=True)
@@ -1240,10 +1240,84 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Pour déterminer la stabilité, il faut trouver les valeurs propres de $A$, c'est-à-dire les racines du polynôme caractéristique $\det(A - \lambda I) = 0$.
+
+    On calcule $A - \lambda I$ :
+
+    $$A - \lambda I = \begin{pmatrix} -\lambda & 1 & 0 & 0 & 0 & 0 \\ 0 & -\lambda & 0 & 0 & -1 & 0 \\ 0 & 0 & -\lambda & 1 & 0 & 0 \\ 0 & 0 & 0 & -\lambda & 0 & 0 \\ 0 & 0 & 0 & 0 & -\lambda & 1 \\ 0 & 0 & 0 & 0 & 0 & -\lambda \end{pmatrix}$$
+
+    On remarque tout de suite que cette matrice est **triangulaire supérieure** (tous les termes sous la diagonale sont nuls). Et on sait que le déterminant d'une matrice triangulaire, c'est juste le produit des éléments diagonaux :
+
+    $$\det(A - \lambda I) = (-\lambda) \times (-\lambda) \times (-\lambda) \times (-\lambda) \times (-\lambda) \times (-\lambda) = (-\lambda)^6 = \lambda^6$$
+
+    Donc le polynôme caractéristique est $\lambda^6 = 0$, ce qui donne une **unique racine** $\lambda = 0$ de **multiplicité 6**.
+
+    **Donc :**
+
+    Un système linéaire $\dot{x} = Ax$ est asymptotiquement stable si et seulement si **toutes** les valeurs propres de $A$ ont une partie réelle strictement négative ($\text{Re}(\lambda_i) < 0$ pour tout $i$).
+
+    Ici, $\text{Re}(\lambda_i) = 0$ pour toutes les valeurs propres. Le système **n'est pas asymptotiquement stable**.
+
+    Physiquement, c'est assez intuitif : sans aucun contrôle ($\Delta f = 0$, $\Delta\phi = 0$), le booster est en chute libre. Une petite perturbation de vitesse entraîne un déplacement qui croît linéairement, une perturbation d'accélération entraîne un déplacement quadratique... le système dérive sans jamais revenir.
+    """)
+    return
+
+
+@app.cell
+def _(A_full, la):
+    eigenvalues_A = la.eigvals(A_full)
+    print("Valeurs propres de A:", eigenvalues_A)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Toutes les valeurs propres sont nulles (ou à partie réelle nulle)
+
+    Le système n'est PAS asymptotiquement stable : il est marginalement stable
+
+    C'est logique, c'est un intégrateur pur sans contrôle, le booster dérive
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Controllability
 
     Is the linearized model controllable?
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On utilise le **critère de Kalman** : le système $(A, B)$ est commandable si et seulement si
+
+    $$\text{rang}\,[B \;,\; AB \;,\; A^2B \;,\; \cdots \;,\; A^{n-1}B] = n$$
+
+    avec $n = 6$ (dimension de l'état).
+
+    Si la matrice de commandabilité est de rang plein, alors on peut amener le système de n'importe quel état initial à n'importe quel état final en temps fini.
+
+    En pratique, on calcule numériquement :
+    """)
+    return
+
+
+@app.cell
+def _(A_full, B_full, la, np):
+    def kalman_matrix(A, B):
+        n = A.shape[0]
+        cols = [np.linalg.matrix_power(A, k) @ B for k in range(n)]
+        return np.hstack(cols)
+
+    C_full = kalman_matrix(A_full, B_full)
+    rank_full = la.matrix_rank(C_full)
+    print(f"Rang de la matrice de commandabilité: {rank_full}")
     return
 
 
