@@ -1747,7 +1747,7 @@ def _(A_lat, B_lat, la, np, plt, sim_linear_lat):
     print(f"|theta| < pi/2 ? {np.all(np.abs(_y_pp[2]) < np.pi/2)}")
     print(f"|phi| < pi/2 ? {np.all(np.abs(_phi_pp) < np.pi/2)}")
     print(f"Asymptotiquement stable ? {np.all(np.real(la.eigvals(A_lat - B_lat @ K_pp)) < 0)}")
-    return
+    return K_pp, X0
 
 
 @app.cell
@@ -1788,6 +1788,39 @@ def _(mo):
     return
 
 
+@app.cell
+def _(A_lat, B_lat, X0, la, np, plt, sim_linear_lat):
+    from scipy.linalg import solve_continuous_are
+
+
+    Q_lqr = np.diag([1.0, 1.0, 10.0, 1.0])
+    R_lqr = np.array([[100.0]])
+    P = solve_continuous_are(A_lat, B_lat, Q_lqr, R_lqr)
+    K_oc = la.inv(R_lqr) @ B_lat.T @ P
+    print("K_oc =", K_oc)
+    print("Pôles LQR:", la.eigvals(A_lat - B_lat @ K_oc))
+
+    t_eval_lqr = np.linspace(0, 60, 3000)
+    t_oc, y_oc = sim_linear_lat(A_lat, B_lat, X0, K_oc, [0, 60], t_eval_lqr)
+    phi_oc = -(K_oc @ y_oc).flatten()
+
+    fig_lqr, axes_lqr = plt.subplots(1, 3, figsize=(15, 4))
+    axes_lqr[0].plot(t_oc, y_oc[2]); axes_lqr[0].set_title(r"$\Delta\theta(t)$"); axes_lqr[0].grid(True)
+    axes_lqr[0].axhline(0, color='k', ls='--', lw=0.5)
+    axes_lqr[1].plot(t_oc, y_oc[0]); axes_lqr[1].set_title(r"$\Delta x(t)$"); axes_lqr[1].grid(True)
+    axes_lqr[1].axhline(0, color='k', ls='--', lw=0.5)
+    axes_lqr[2].plot(t_oc, phi_oc); axes_lqr[2].set_title(r"$\Delta\phi(t)$"); axes_lqr[2].grid(True)
+    axes_lqr[2].axhline(np.pi/2, color='r', ls='--')
+    axes_lqr[2].axhline(-np.pi/2, color='r', ls='--')
+    plt.suptitle("LQR Controller")
+    plt.tight_layout(); plt.show()
+
+    print(f"|theta| < pi/2 ? {np.all(np.abs(y_oc[2]) < np.pi/2)}")
+    print(f"|phi| < pi/2 ? {np.all(np.abs(phi_oc) < np.pi/2)}")
+    print(f"Asymptotiquement stable ? {np.all(np.real(la.eigvals(A_lat - B_lat @ K_oc)) < 0)}")
+    return (K_oc,)
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -1795,6 +1828,89 @@ def _(mo):
 
     Test the two control strategies (pole placement and optimal control) on the "true" (nonlinear) model with an animation. Check that both controllers achieve their goal; otherwise, go back to the drawing board and tweak the design parameters until they do!
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On teste les deux contrôleurs (pole placement et LQR) sur le vrai modèle **non-linéaire**. On part de $\theta_0 = \pi/4$ avec $f = Mg$ et on contrôle uniquement $\phi$.
+
+    C'est le vrai test : est-ce que la linéarisation tient la route quand les non-linéarités sont présentes ?
+    """)
+    return
+
+
+@app.cell
+def _(K_oc, K_pp, M, g, np, plt, redstart_solve):
+    def simulate_nonlinear(K_ctrl, label, t_end=40.0):
+        y_eq = 5.0  # arbitrary hover height
+        y0 = [0.0, 0.0, y_eq, 0.0, np.pi/4, 0.0]  # [x,vx,y,vy,theta,omega]
+        def f_phi_ctrl(t, state):
+            x, vx, y, vy, theta, omega = state
+            Ds = np.array([x - 0, vx - 0, theta - 0, omega - 0])
+            phi = float(-(K_ctrl @ Ds).flatten()[0])
+            phi = np.clip(phi, -np.pi/2 + 0.01, np.pi/2 - 0.01)
+            return np.array([M * g, phi])
+        sol = redstart_solve([0, t_end], y0, f_phi_ctrl)
+        t = np.linspace(0, t_end, 2000)
+        s = sol(t)
+        phi_t = np.array([f_phi_ctrl(ti, s[:, i])[1] for i, ti in enumerate(t)])
+        return t, s, phi_t
+
+    fig_nl, axes_nl = plt.subplots(2, 3, figsize=(15, 8))
+    for i, (K, name) in enumerate([(K_pp, "Pole Placement"), (K_oc, "LQR")]):
+        t_nl, s_nl, phi_nl = simulate_nonlinear(K, name)
+        axes_nl[i,0].plot(t_nl, s_nl[0]); axes_nl[i,0].set_title(f"{name}: $x(t)$"); axes_nl[i,0].grid(True)
+        axes_nl[i,1].plot(t_nl, s_nl[4]); axes_nl[i,1].set_title(f"{name}: $\\theta(t)$"); axes_nl[i,1].grid(True)
+        axes_nl[i,1].axhline(0, color='k', ls='--', lw=0.5)
+        axes_nl[i,2].plot(t_nl, phi_nl); axes_nl[i,2].set_title(f"{name}: $\\phi(t)$"); axes_nl[i,2].grid(True)
+        axes_nl[i,2].axhline(np.pi/2, color='r', ls='--')
+        axes_nl[i,2].axhline(-np.pi/2, color='r', ls='--')
+    plt.tight_layout(); plt.show()
+    return
+
+
+@app.cell
+def _(K_oc, K_pp, M, booster_anim, g, mo, np, redstart_solve, world):
+    ## Validation cell — code
+
+    def validate_controller(K_ctrl, label, t_end=40.0):
+        """Simule le modèle NON-LINÉAIRE avec le contrôleur K et renvoie une animation SVG."""
+        y_eq = 5.0
+        y0 = [0.0, 0.0, y_eq, 0.0, np.pi/4, 0.0]  # theta_0 = pi/4
+
+        def f_phi_ctrl(t, state):
+            x, vx, y, vy, theta, omega = state
+            Ds = np.array([x, vx, theta, omega])  # erreur par rapport à l'équilibre (0,0,0,0)
+            phi = float(-(K_ctrl @ Ds).flatten()[0])
+            phi = np.clip(phi, -np.pi/2 + 0.01, np.pi/2 - 0.01)  # saturation
+            return np.array([M * g, phi])
+
+        sol = redstart_solve([0, t_end], y0, f_phi_ctrl)
+
+        # Animation
+        anim = booster_anim(
+            lambda t: sol(t)[0],       # x(t)
+            lambda t: sol(t)[2],       # y(t)
+            lambda t: sol(t)[4],       # theta(t)
+            lambda t: M * g,           # f = Mg constant
+            lambda t: f_phi_ctrl(t, sol(t))[1],  # phi(t) du contrôleur
+            T=t_end
+        )
+        return anim
+
+    vb = [-5, 5, -2, 8]
+    mo.hstack([
+        mo.Html(world(vb, validate_controller(K_pp, "Pole Placement"))),
+        mo.Html(world(vb, validate_controller(K_oc, "LQR"))),
+    ], justify="space-around")
+
+    return
+
+
+@app.cell
+def _():
     return
 
 
