@@ -1112,7 +1112,7 @@ def _(mo):
 
     **Conclusion sur l'état d'équilibre :**
     Sans grande surprise, la seule configuration permettant un vol stationnaire (Hovering) correspond à un lanceur parfaitement vertical, sans braquage de la tuyère, avec une poussée égale à son poids. L'unique point d'équilibre $(x_e, y_e, \theta_e, f_e, \phi_e)$ est donc caractérisé par :
-
+    $$s = (x, 0, y, 0, 0, 0),$$
     $$f = Mg \quad ; \quad \theta = 0 \quad ; \quad \phi = 0$$
     *(Note : les positions $x$ et $y$ peuvent être quelconques, le système est invariant par translation spatiale).*
     """)
@@ -1126,6 +1126,43 @@ def _(mo):
 
     Introduce the error variables $\Delta x$, $\Delta y$, $\Delta \theta$, and $\Delta f$ and $\Delta \phi$ of the state and input values with respect to the generic equilibrium configuration.
     What are the linear ordinary differential equations that govern (approximately) these variables in a neighbourhood of the equilibrium?
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On introduit nos variables d'erreur (les $\Delta$) autour du point d'équilibre stationnaire qu'on vient de trouver ($\theta_e = 0$, $f_e = Mg$, $\phi_e = 0$) :
+    $$x = x_e + \Delta x \quad ; \quad y = y_e + \Delta y \quad ; \quad \theta = \Delta\theta$$
+    $$f = Mg + \Delta f \quad ; \quad \phi = \Delta\phi$$
+
+    On injecte ça dans nos équations du mouvement en utilisant le développement de Taylor à l'ordre 1 (les approximations des petits angles $\sin(\epsilon) \approx \epsilon$ et $\cos(\epsilon) \approx 1$). Et surtout, on jette sans remords tous les termes d'ordre 2 (les produits de deux $\Delta$).
+
+    **1. Dynamique horizontale ($\Delta x$) :**
+    $$M\Delta\ddot{x} = -(Mg + \Delta f)\sin(\Delta\theta + \Delta\phi)$$
+    Avec les petits angles, on a $\sin(\Delta\theta + \Delta\phi) \approx \Delta\theta + \Delta\phi$. En développant, on obtient le terme croisé $-\Delta f(\Delta\theta + \Delta\phi)$ qui est d'ordre 2. On le néglige allègrement :
+    $$M\Delta\ddot{x} \approx -Mg(\Delta\theta + \Delta\phi)$$
+    Ce qui nous donne :
+    $$\Delta\ddot{x} = -g(\Delta\theta + \Delta\phi)$$
+
+    **2. Dynamique verticale ($\Delta y$) :**
+    $$M\Delta\ddot{y} = (Mg + \Delta f)\cos(\Delta\theta + \Delta\phi) - Mg$$
+    Ici, $\cos(\Delta\theta + \Delta\phi) \approx 1$. L'équation devient merveilleusement simple, les $Mg$ s'annulent :
+    $$M\Delta\ddot{y} = Mg + \Delta f - Mg$$
+    $$\Delta\ddot{y} = \frac{1}{M}\Delta f$$
+
+    **3. Dynamique de rotation ($\Delta \theta$) :**
+    $$J\Delta\ddot{\theta} = -\frac{(Mg + \Delta f)\ell}{2}\sin(\Delta\phi)$$
+    On passe le sinus en $\Delta\phi$, et on développe. Là encore, on tombe sur un terme d'ordre 2 : $-\frac{\ell}{2}\Delta f \Delta\phi$ qu'on annule :
+    $$J\Delta\ddot{\theta} \approx -\frac{Mg\ell}{2}\Delta\phi$$
+    Ce qui donne :
+    $$\Delta\ddot{\theta} = -\frac{Mg\ell}{2J}\Delta\phi$$
+
+    **Bilan de la linéarisation :**
+    Les équations sont complètement découplées !
+    * La dynamique verticale ($\Delta y, \Delta v_y$) ne dépend QUE de la variation de poussée $\Delta f$.
+    * La dynamique latérale et de rotation ($\Delta x, \Delta v_x, \Delta\theta, \Delta\omega$) ne dépend QUE de l'angle de braquage de la tuyère $\Delta\phi$.
     """)
     return
 
