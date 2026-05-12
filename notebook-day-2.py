@@ -1490,7 +1490,7 @@ def _(A_lat, B_lat, np, plt, sci):
     axes[1].set_xlabel("t (s)")
     plt.tight_layout()
     plt.show()
-    return
+    return (sim_linear_lat,)
 
 
 @app.cell(hide_code=True)
@@ -1545,96 +1545,118 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    On cherche $K = [0, 0, k_3, k_4]$, donc $\Delta\phi = -k_3\Delta\theta - k_4\Delta\omega$. On ne contrôle que l'angle, on accepte que $x$ dérive.
+    On a:
+    $K = [0, 0, k_\theta, k_{\dot\theta}]$ donc :
 
-    En injectant dans l'équation angulaire :
-    $$\Delta\ddot{\theta} = -3\Delta\phi = -3(-k_3\Delta\theta - k_4\Delta\omega) = 3k_3\Delta\theta + 3k_4\Delta\omega$$
+    $$\Delta\phi(t) = -k_\theta \Delta\theta(t) - k_{\dot\theta} \Delta\dot{\theta}(t)$$
 
-    Le sous-système $(\Delta\theta, \Delta\omega)$ en boucle fermée est :
-    $$\frac{d}{dt}\begin{pmatrix}\Delta\theta \\ \Delta\omega\end{pmatrix} = \underbrace{\begin{pmatrix} 0 & 1 \\ 3k_3 & 3k_4\end{pmatrix}}_{A_{cl}}\begin{pmatrix}\Delta\theta \\ \Delta\omega\end{pmatrix}$$
+    On n'agit que sur $\theta$ et $\dot\theta$ (on ignore $x$ pour l'instant). En substituant dans la dynamique angulaire :
 
-    Le polynôme caractéristique de $A_{cl}$ :
-    $$\det(A_{cl} - \lambda I) = \det\begin{pmatrix} -\lambda & 1 \\ 3k_3 & 3k_4 - \lambda\end{pmatrix} = \lambda^2 - 3k_4\lambda - 3k_3 = 0$$
+    $$\Delta\ddot\theta = -\frac{Mg\ell}{2J}\Delta\phi = \frac{Mg\ell}{2J}\left(k_\theta \Delta\theta + k_{\dot\theta}\Delta\dot\theta\right)$$
 
-    Pour que le système soit stable, il faut les deux racines à partie réelle négative. Par les formules de Viète :
-    - Somme des racines : $\lambda_1 + \lambda_2 = 3k_4$ → il faut $k_4 < 0$
-    - Produit des racines : $\lambda_1 \cdot \lambda_2 = -3k_3$ → pour un produit positif (deux racines négatives), il faut $k_3 < 0$
+    Posons $\alpha = \frac{Mg\ell}{2J} = 3$ avec nos constantes. L'équation devient :
 
-    Si on veut deux pôles réels identiques à $-\sigma$ (temps de convergence $\sim 4/\sigma$) :
-    - $-2\sigma = 3k_4$ → $k_4 = -2\sigma/3$
-    - $\sigma^2 = -3k_3$ → $k_3 = -\sigma^2/3$
+    $$\Delta\ddot\theta - \alpha k_{\dot\theta}\,\Delta\dot\theta - \alpha k_\theta\,\Delta\theta = 0$$
 
-    Avec $\sigma = 0.2$ (convergence en ~20s puisque $4/0.2 = 20$) :
-    $$k_3 = -0.04/3 \approx -0.0133, \quad k_4 = -0.4/3 \approx -0.133$$
+    C'est un *oscillateur du second ordre*. On identifie avec la forme standard $\ddot q + 2\zeta\omega_n \dot q + \omega_n^2 q = 0$ :
 
-    On simule, on vérifie que $|\theta(t)| < \pi/2$ et $|\phi(t)| < \pi/2$, et on ajuste si ça dépasse.
+    $$\omega_n^2 = -\alpha k_\theta \implies k_\theta < 0$$
+    $$2\zeta\omega_n = -\alpha k_{\dot\theta} \implies k_{\dot\theta} < 0$$
 
-    **Note :** la boucle fermée complète (4×4) aura 2 pôles à $-\sigma$ (les pôles angulaires qu'on a placés) et 2 pôles à 0 (les pôles de $x$ qu'on n'a pas touchés). Donc le système complet n'est **pas** asymptotiquement stable (drift sur $x$), mais l'énoncé dit que c'est OK.
+    Pour converger en ~20s, on veut $\omega_n \approx 0.3$ rad/s et $\zeta \approx 1$ (critiquement amorti) :
+
+    $$k_\theta = -\frac{\omega_n^2}{\alpha} = -\frac{0.09}{3} = -0.03$$
+    $$k_{\dot\theta} = -\frac{2\zeta\omega_n}{\alpha} = -\frac{0.6}{3} = -0.2$$
+
+
+    en effet:
+
+    L'équation de $\Delta\theta$ en boucle fermée est :
+
+    $$\Delta\ddot\theta + 2\zeta\omega_n,\Delta\dot\theta + \omega_n^2,\Delta\theta = 0$$
+
+    La solution générale (pour $\zeta = 1$, cas critique) est :
+
+    $$\Delta\theta(t) = (A + Bt)e^{-\omega_n t}$$
+
+    Le terme $e^{-\omega_n t}$ contrôle la vitesse de convergence.
+
+    La constante de temps du système est $\tau = \dfrac{1}{\omega_n}$. On considère que le système a convergé après environ $5\tau$ (règle empirique : à $5\tau$, on est à $e^{-5} \approx 0.7%$ de la valeur initiale) :
+
+    $$t_{\text{convergence}} \approx 5\tau = \frac{5}{\omega_n}$$
+
+    On veut converger en $\sim 20$ s :
+
+    $$\frac{5}{\omega_n} = 20 \implies \omega_n = \frac{5}{20} = 0.25 \approx 0.3 \text{ rad/s}$$
+
+    $\zeta = 1$ implique un retour le plus rapide sans dépasser 0
     """)
     return
 
 
 @app.cell
-def _(A_lat, B_lat, J, M, g, l, np, plt):
-    from scipy.integrate import solve_ivp
-    X0 = [0, 0, np.pi/4, 0]
+def _(A_lat, J, M, g, l, np, plt, sci):
+    def simulate_manually_tunned():
 
-    def _():
-        alpha = M * g * l / (2 * J)  # = 3.0
+        alpha = M * g * l / (2 * J)    # = 3.0
+        B = np.array([0, -g, 0, -alpha])   # vecteur colonne (4,)
+
+        X0     = np.array([0.0, 0.0, np.pi/4, 0.0])
         t_span = [0, 40]
-        t = np.linspace(0, 40, 5000)
+        t_eval = np.linspace(0, 40, 2000)
+
+        # Gains à tester (k_theta, k_dtheta, label, couleur)
+        # Choix guidé par la forme standard : ωₙ² = α|k_θ|, 2ζωₙ = α|k_θ̇|
+        # Cible : ωₙ ≈ 0.3 rad/s, ζ ≈ 1 (amorti critique) → convergence ~20s
+        # Voir l'analyse ci*dessous
         gains = [
-            (-0.013, -0.13),
-            (-0.02, -0.2),
-            (-0.04, -0.4),
-            (-1, -10),
+            (-0.03, -0.20, "iter 1 — ωₙ=0.30, ζ=1.0",     "royalblue"),
+            (-0.05, -0.30, "iter 2 — ωₙ=0.39, ζ=1.0",     "darkorange"),
+            (-0.08, -0.35, "iter 3 — ωₙ=0.49, ζ=0.71",    "seagreen"),
+            (-0.05, -0.25, "iter 4 — ωₙ=0.39, ζ=0.96",    "crimson"),
+            (-0.03, -0.1, "iter 4 — ωₙ=0.3, ζ=0.5",    "yellow"),
         ]
 
         fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-
-        for k_th, k_dth in gains:
+        for k_th, k_dth, label, color in gains:
             K = np.array([0, 0, k_th, k_dth])
-            label = f"k_th={k_th}, k_dth={k_dth}"
-            def closed_loop(t, X):
+        
+            def closed_loop(t, X, K=K):
                 delta_phi = -K @ X
-                u = np.array([[delta_phi]])
-                return (A_lat @ X.reshape(-1,1) + B_lat * delta_phi).flatten()
+                return A_lat @ X + B * delta_phi
 
-            sol = solve_ivp(closed_loop, t_span, X0, dense_output=True,
-                            rtol=1e-10, atol=1e-10)
-            X_t = sol.sol(t)
-            x_t     = X_t[0]
-            theta_t = X_t[2]
-            phi_t   = -(K[2]*X_t[2] + K[3]*X_t[3])
+            sol = sci.solve_ivp(closed_loop, t_span, X0,
+                            dense_output=True, rtol=1e-10, atol=1e-10)
+            X_t   = sol.sol(t_eval)
+            x_t   = X_t[0]
+            th_t  = X_t[2]
+            dth_t = X_t[3]
+            phi_t = -(K[2] * th_t + K[3] * dth_t)
+            axes[0].plot(t_eval, np.degrees(th_t),  label=label, color=color)
+            axes[1].plot(t_eval, np.degrees(phi_t), label=label, color=color)
+            axes[2].plot(t_eval, x_t,               label=label, color=color)
 
-            axes[0].plot(t, np.degrees(theta_t), label=label)
-            axes[1].plot(t, np.degrees(phi_t),   label=label)
-            axes[2].plot(t, x_t,                 label=label)
-
-        # Contraintes
         for ax in axes[:2]:
-            ax.axhline( 90, color="grey", ls=":", lw=1, label=r"$\pm 90°$ limite")
-            ax.axhline(-90, color="grey", ls=":", lw=1)
+            ax.axhline( 90, color="grey", ls=":", lw=1)
+            ax.axhline(-90, color="grey", ls=":", lw=1, label="±90° (limite)")
+        titles  = [r"$\Delta\theta(t)$ (degrés)",
+                   r"$\Delta\phi(t)$  (degrés)",
+                   r"$\Delta x(t)$    (m)"]
+        ylabels = ["degrés", "degrés", "m"]
 
-        axes[0].axhline(0, color="black", ls="--", lw=0.8)
-        axes[0].set_title(r"$\Delta\theta(t)$")
-        axes[0].set_xlabel("temps (s)"); axes[0].set_ylabel("degrés")
-        axes[0].legend(fontsize=7); axes[0].grid(True)
-
-        axes[1].set_title(r"$\Delta\phi(t)$")
-        axes[1].set_xlabel("temps (s)"); axes[1].set_ylabel("degrés")
-        axes[1].legend(fontsize=7); axes[1].grid(True)
-
-        axes[2].set_title(r"$\Delta x(t)$")
-        axes[2].set_xlabel("temps (s)"); axes[2].set_ylabel("m")
-        axes[2].legend(fontsize=7); axes[2].grid(True)
+        for ax, title, ylabel in zip(axes, titles, ylabels):
+            ax.axhline(0, color="black", ls="--", lw=0.8)
+            ax.set_title(title)
+            ax.set_xlabel("temps (s)")
+            ax.set_ylabel(ylabel)
+            ax.legend(fontsize=7)
+            ax.grid(True)
 
         plt.suptitle("Contrôleur manuel — itérations sur les gains", fontsize=12)
         plt.tight_layout()
         return plt.show()
 
-
-    _()
+    simulate_manually_tunned()
     return
 
 
@@ -1680,11 +1702,151 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    On utilise `place_poles` pour placer les 4 pôles de $A_{lat} - B_{lat}K_{pp}$. Contrairement au contrôleur manuel, cette fois on veut aussi $\Delta x \to 0$, donc les 4 pôles doivent être dans le demi-plan gauche.
+
+    Pour le placement de pôles, on a le choix entre des pôles réels ou complexes conjugués. Les deux sont valides, mais le comportement est différent :
+    - **Pôles réels** ($\lambda = -\sigma$) : la réponse est une décroissance exponentielle pure $e^{-\sigma t}$, sans oscillation. C'est "doux" mais parfois lent.
+    - **Pôles complexes** ($\lambda = -\sigma \pm j\omega_d$) : la réponse est une exponentielle amortie multipliée par une sinusoïde : $e^{-\sigma t}\cos(\omega_d t + \varphi)$. Le système oscille un peu autour de l'équilibre avant de se stabiliser.
+    La partie réelle $-\sigma$ contrôle la **vitesse de convergence** (constante de temps $\tau = 1/\sigma$), et la partie imaginaire $\omega_d$ contrôle la **fréquence d'oscillation**.
+    L'avantage des pôles complexes, c'est qu'on peut avoir une convergence plus rapide pour un effort de commande comparable.
+
+
+    **Contrainte importante :** les pôles complexes doivent toujours venir par **paires conjuguées** ($\lambda$ et $\bar{\lambda}$), sinon le gain $K$ ne serait pas réel et on aurait une commande $\phi$ complexe, ce qui n'a pas de sens physique.
+    On essaie ici :
+    $$\lambda_{1,2} = -0.5 \pm 0.1j, \qquad \lambda_{3,4} = -0.3 \pm 0.1j$$
+    d'abord, puis on ajuste.
+    """)
+    return
+
+
+@app.cell
+def _(A_lat, B_lat, la, np, plt, sim_linear_lat):
+    from scipy.signal import place_poles
+
+    desired_poles = np.array([-0.5+0.1j, -0.5-0.1j, -0.3+0.1j, -0.3-0.1j])
+    _result_pp = place_poles(A_lat, B_lat, desired_poles)
+    K_pp = _result_pp.gain_matrix
+    print("K_pp =", K_pp)
+    print("Pôles obtenus:", la.eigvals(A_lat - B_lat @ K_pp))
+    X0     = np.array([0.0, 0.0, np.pi/4, 0.0])
+    _t_eval = np.linspace(0, 60, 3000)
+    _t_pp, _y_pp = sim_linear_lat(A_lat, B_lat, X0, K_pp, [0, 60], _t_eval)
+    _phi_pp = -(K_pp @ _y_pp).flatten()
+
+    _fig, _axes = plt.subplots(1, 3, figsize=(15, 4))
+    _axes[0].plot(_t_pp, _y_pp[2]); _axes[0].set_title(r"$\Delta\theta(t)$"); _axes[0].grid(True)
+    _axes[0].axhline(0, color='k', ls='--', lw=0.5)
+    _axes[1].plot(_t_pp, _y_pp[0]); _axes[1].set_title(r"$\Delta x(t)$"); _axes[1].grid(True)
+    _axes[1].axhline(0, color='k', ls='--', lw=0.5)
+    _axes[2].plot(_t_pp, _phi_pp); _axes[2].set_title(r"$\Delta\phi(t)$"); _axes[2].grid(True)
+    _axes[2].axhline(np.pi/2, color='r', ls='--')
+    _axes[2].axhline(-np.pi/2, color='r', ls='--')
+    plt.suptitle("Pole Placement Controller")
+    plt.tight_layout(); plt.show()
+
+    print(f"|theta| < pi/2 ? {np.all(np.abs(_y_pp[2]) < np.pi/2)}")
+    print(f"|phi| < pi/2 ? {np.all(np.abs(_phi_pp) < np.pi/2)}")
+    print(f"Asymptotiquement stable ? {np.all(np.real(la.eigvals(A_lat - B_lat @ K_pp)) < 0)}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Controller Tuned with Optimal Control
 
     Using optimal control, find a gain matrix $K_{oc}$ that satisfies the same set of requirements that the one defined using pole placement.
 
     Explain how you find the proper design parameters!
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Au lieu de choisir les pôles à la main, on formule un problème d'optimisation. On minimise le coût :
+    $$J = \int_0^\infty \left(\Delta s^T Q \Delta s + \Delta\phi^T R \Delta\phi\right) dt$$
+
+    L'idée c'est :
+    - **$Q$ grand** → on pénalise les écarts d'état, le système converge vite
+    - **$R$ grand** → on pénalise l'effort de commande, $\phi$ reste petit
+    - C'est un compromis entre performance et effort
+
+    On résout l'**équation algébrique de Riccati** :
+    $$A^T P + PA - PBR^{-1}B^TP + Q = 0$$
+
+    Et le gain optimal est $K_{oc} = R^{-1}B^TP$..
+
+    On commence avec $Q = \text{diag}(1, 1, 10, 1)$ et $R = 100$, puis on ajuste.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Let the gain vector be defined as:
+
+    $$
+    K = [0,\;0,\;k_3,\;k_4]
+    $$
+
+    The control law is given by:
+
+    $$
+    \Delta \phi = -k_3 \Delta \theta - k_4 \Delta \dot{\theta}
+    $$
+
+    Substituting this expression into the system dynamics:
+
+    $$
+    \Delta \ddot{\theta} = -\alpha \Delta \phi
+    $$
+
+    We obtain:
+
+    $$
+    \Delta \ddot{\theta} = -\alpha(-k_3 \Delta \theta - k_4 \Delta \dot{\theta})
+    $$
+
+    $$
+    \Delta \ddot{\theta} = \alpha k_3 \Delta \theta + \alpha k_4 \Delta \dot{\theta}
+    $$
+
+    ### Characteristic Polynomial
+
+    The associated characteristic polynomial is:
+
+    $$
+    s^2 - \alpha k_4 s - \alpha k_3 = 0
+    $$
+
+    ### Stability Condition
+
+    For a second-order system of the form:
+
+    $$
+    s^2 + a_1 s + a_0
+    $$
+
+    Stability requires:
+
+    $$
+    a_1 > 0 \quad \text{and} \quad a_0 > 0
+    $$
+
+    In our case, we identify:
+
+    $$
+    a_1 = -\alpha k_4, \quad a_0 = -\alpha k_3
+    $$
+
+    Therefore, assuming $\alpha > 0$, the stability conditions become:
+
+    $$
+    k_3 < 0, \quad k_4 < 0
+    $$
     """)
     return
 
