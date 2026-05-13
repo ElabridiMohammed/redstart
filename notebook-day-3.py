@@ -2269,6 +2269,12 @@ def _(mo):
     return
 
 
+@app.cell
+def _(mo):
+    mo.image(src="Inter.jpeg")
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -2298,23 +2304,57 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    On dérive à nouveau. En utilisant les équations du mouvement $M\dot{v}_x = f_x$ et $M\dot{v}_y = f_y - Mg$ :
+    On dérive $\dot{h}$ :
 
-    $$\ddot{h}_x = \dot{v}_x - \frac{\ell}{6}\left(\dot\omega\cos\theta - \omega^2\sin\theta\right)$$
+    $$\ddot{h}_x = \ddot{x} - \frac{\ell}{6}\frac{d}{dt}\!\left(\cos\theta\,\dot\theta\right)$$
 
-    $$\ddot{h}_y = \dot{v}_y - \frac{\ell}{6}\left(\dot\omega\sin\theta + \omega^2\cos\theta\right)$$
+    En effet $\dfrac{d}{dt}(\cos\theta\,\dot\theta) = -\sin\theta\,\dot\theta^2 + \cos\theta\,\ddot\theta$, donc :
 
-    En substituant $M\dot{v}_x = f_x$, $M\dot{v}_y = f_y - Mg$, et $J\dot\omega = -\frac{\ell}{2}f\sin\phi$ :
+    $$\ddot{h}_x = \ddot{x} + \frac{\ell}{6}\sin\theta\,\dot\theta^2 - \frac{\ell}{6}\cos\theta\,\ddot\theta$$
 
-    $$\ddot{h} = \frac{1}{M}\begin{bmatrix}f_x \\ f_y\end{bmatrix} - \begin{bmatrix}0 \\ g\end{bmatrix} - \frac{\ell}{6}\dot\omega\begin{bmatrix}\cos\theta \\ \sin\theta\end{bmatrix} + \frac{\ell\omega^2}{6}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix}$$
+    $$\ddot{h}_y = \ddot{y} - \frac{\ell}{6}\frac{d}{dt}\!\left(\sin\theta\,\dot\theta\right)$$
 
-    Or $\dot\omega = -\frac{f\ell}{2J}\sin\phi$. En substituant le système auxiliaire $(f_x, f_y) = R(\theta-\pi/2)\begin{bmatrix}z - M\ell\omega^2/6 \\ M\ell v_2/(6z)\end{bmatrix}$ et en notant que $J = M\ell^2/12$ donc $\frac{\ell}{2J} = \frac{6}{M\ell}$ :
+    Or $\dfrac{d}{dt}(\sin\theta\,\dot\theta) = \cos\theta\,\dot\theta^2 + \sin\theta\,\ddot\theta$, donc :
+    $$\ddot{h}_y = \ddot{y} - \frac{\ell}{6}\cos\theta\,\dot\theta^2 - \frac{\ell}{6}\sin\theta\,\ddot\theta$$
 
-    Après calcul (développement de $R(\theta-\pi/2)$ et regroupement des termes en $\omega^2$), on obtient la forme remarquable :
+    La dynamique de translation donne $M\ddot{x} = f_x$, $M\ddot{y} = f_y - Mg$, et le système auxiliaire fournit :
 
-    $$\boxed{\ddot{h} = \frac{z}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix} + \frac{v_2}{6}\begin{bmatrix}\cos\theta \\ \sin\theta\end{bmatrix} - \begin{bmatrix}0 \\ g\end{bmatrix}}$$
+    $$\begin{pmatrix}f_x\\f_y\end{pmatrix} = R\!\left(\theta-\frac{\pi}{2}\right)\begin{pmatrix}z - \dfrac{M\ell\dot\theta^2}{6}\\[4pt]\dfrac{M\ell v_2}{6z}\end{pmatrix}$$
 
-    **Interprétation :** Les termes en $\omega^2$ se simplifient exactement grâce au choix judicieux de $h$. C'est la raison profonde pour laquelle ce point particulier du booster est choisi comme sortie : il annule les **termes centrifuges** dans la dynamique de sortie.
+    En développant $R(\theta - \pi/2) = \begin{pmatrix}\sin\theta & \cos\theta \\ -\cos\theta & \sin\theta\end{pmatrix}$, on obtient :
+
+    $$f_x = \sin\theta\!\left(z - \frac{M\ell\dot\theta^2}{6}\right) + \cos\theta\!\left(\frac{M\ell v_2}{6z}\right)$$
+
+    $$f_y = -\cos\theta\!\left(z - \frac{M\ell\dot\theta^2}{6}\right) + \sin\theta\!\left(\frac{M\ell v_2}{6z}\right)$$
+
+    D'où les accélérations de translation :
+    $$\ddot{x} = \frac{z}{M}\sin\theta - \frac{\ell}{6}\dot\theta^2\sin\theta + \frac{\ell v_2}{6z}\cos\theta$$
+
+    $$\ddot{y} = -\frac{z}{M}\cos\theta + \frac{\ell}{6}\dot\theta^2\cos\theta + \frac{\ell v_2}{6z}\sin\theta - g$$
+
+    Le couple vaut $J\ddot\theta = (\ell/2)\cdot f\sin\phi$
+
+    on : $f\sin\phi = \tfrac{M\ell\,v_2}{6z}$
+
+    En substituant : $\tfrac{M\ell^2}{12}\,\ddot\theta = \tfrac{M\ell^2}{12}\cdot\tfrac{v_2}{z}$, et comme $J = M\ell^2/12$, tout se simplifie :
+
+    $$\ddot\theta = \frac{v_2}{z}$$
+
+    On remplace $\ddot{x}$ et $\ddot\theta$ dans $\ddot{h}_x$ :
+
+    $$\ddot{h}_x = \left(\frac{z}{M}\sin\theta - \frac{\ell}{6}\dot\theta^2\sin\theta + \frac{\ell v_2}{6z}\cos\theta\right) + \frac{\ell}{6}\sin\theta\,\dot\theta^2 - \frac{\ell}{6}\cos\theta\cdot\frac{v_2}{z}$$
+
+    Il reste :
+    $$\boxed{\ddot{h}_x = \frac{z}{M}\sin\theta}$$
+
+    On remplace $\ddot{y}$ et $\ddot\theta$ dans $\ddot{h}_y$ :
+
+    $$\ddot{h}_y = \left(-\frac{z}{M}\cos\theta + \frac{\ell}{6}\dot\theta^2\cos\theta + \frac{\ell v_2}{6z}\sin\theta - g\right) - \frac{\ell}{6}\cos\theta\,\dot\theta^2 - \frac{\ell}{6}\sin\theta\cdot\frac{v_2}{z}$$
+
+    Il reste :
+    $$\boxed{\ddot{h}_y = -\frac{z}{M}\cos\theta - g}$$
+
+    $$\boxed{\ddot{h} = \frac{z}{M}\begin{pmatrix}\sin\theta \\ -\cos\theta\end{pmatrix} - \begin{pmatrix}0 \\ g\end{pmatrix}}$$
     """)
     return
 
@@ -2329,8 +2369,82 @@ def _(mo):
     return
 
 
-@app.cell
-def _():
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    La troisième dérivée
+
+    On repart du résultat établi :
+    $$\ddot{h} = \frac{z}{M}\begin{pmatrix}\sin\theta \\ -\cos\theta\end{pmatrix} - \begin{pmatrix}0 \\ g\end{pmatrix}$$
+
+    On dérive composante par composante. La constante $g$ disparaît, et on applique la règle du produit à $\frac{z}{M}\sin\theta$ et $\frac{z}{M}(-\cos\theta)$.
+
+    **Composante $h^{(3)}_x$ :** on dérive $\frac{z}{M}\sin\theta$,
+
+    $$h^{(3)}_x = \frac{\dot{z}}{M}\sin\theta + \frac{z}{M}\cos\theta\,\dot\theta$$
+
+    **Composante $h^{(3)}_y$ :** on dérive $-\frac{z}{M}\cos\theta$,
+
+    $$h^{(3)}_y = -\frac{\dot{z}}{M}\cos\theta + \frac{z}{M}\sin\theta\,\dot\theta$$
+
+    Donc :
+
+    $$\boxed{h^{(3)} = \frac{\dot{z}}{M}\begin{pmatrix}\sin\theta \\ -\cos\theta\end{pmatrix} + \frac{z\dot\theta}{M}\begin{pmatrix}\cos\theta \\ \sin\theta\end{pmatrix}}$$
+
+    La quatrième dérivée
+
+    On dérive $h^{(3)}$ composante par composante. On a quatre termes à différentier via la règle du produit.
+
+    **Composante $h^{(4)}_x$ :** on dérive $\frac{\dot{z}}{M}\sin\theta + \frac{z\dot\theta}{M}\cos\theta$,
+
+    $$h^{(4)}_x = \frac{\ddot{z}}{M}\sin\theta + \frac{\dot{z}}{M}\cos\theta\,\dot\theta + \frac{d}{dt}\!\left(\frac{z\dot\theta}{M}\cos\theta\right)$$
+
+    Or $\dfrac{d}{dt}(z\dot\theta\cos\theta) = \dot{z}\dot\theta\cos\theta + z\ddot\theta\cos\theta - z\dot\theta\sin\theta\,\dot\theta$, donc :
+
+    $$h^{(4)}_x = \frac{\ddot{z}}{M}\sin\theta + \frac{\dot{z}\dot\theta}{M}\cos\theta + \frac{\dot{z}\dot\theta}{M}\cos\theta + \frac{z\ddot\theta}{M}\cos\theta - \frac{z\dot\theta^2}{M}\sin\theta$$
+
+    $$h^{(4)}_x = \frac{\ddot{z}}{M}\sin\theta + \frac{2\dot{z}\dot\theta}{M}\cos\theta + \frac{z\ddot\theta}{M}\cos\theta - \frac{z\dot\theta^2}{M}\sin\theta$$
+
+    **Composante $h^{(4)}_y$ :** on dérive $-\frac{\dot{z}}{M}\cos\theta + \frac{z\dot\theta}{M}\sin\theta$,
+
+    $$h^{(4)}_y = -\frac{\ddot{z}}{M}\cos\theta + \frac{\dot{z}}{M}\sin\theta\,\dot\theta + \frac{d}{dt}\!\left(\frac{z\dot\theta}{M}\sin\theta\right)$$
+
+    Or $\dfrac{d}{dt}(z\dot\theta\sin\theta) = \dot{z}\dot\theta\sin\theta + z\ddot\theta\sin\theta + z\dot\theta\cos\theta\,\dot\theta$, donc :
+
+    $$h^{(4)}_y = -\frac{\ddot{z}}{M}\cos\theta + \frac{\dot{z}\dot\theta}{M}\sin\theta + \frac{\dot{z}\dot\theta}{M}\sin\theta + \frac{z\ddot\theta}{M}\sin\theta + \frac{z\dot\theta^2}{M}\cos\theta$$
+
+    $$h^{(4)}_y = -\frac{\ddot{z}}{M}\cos\theta + \frac{2\dot{z}\dot\theta}{M}\sin\theta + \frac{z\ddot\theta}{M}\sin\theta + \frac{z\dot\theta^2}{M}\cos\theta$$
+
+
+    Le système auxiliaire donne $\ddot{z} = v_1$ et $\ddot\theta = v_2/z$. On substitue :
+
+    **Dans $h^{(4)}_x$ :**
+
+    $$h^{(4)}_x = \frac{v_1}{M}\sin\theta + \frac{2\dot{z}\dot\theta}{M}\cos\theta + \frac{z}{M}\cdot\frac{v_2}{z}\cos\theta - \frac{z\dot\theta^2}{M}\sin\theta$$
+
+    Le troisième terme se simplifie $\frac{z}{M}\cdot\frac{v_2}{z} = \frac{v_2}{M}$, donc :
+
+    $$h^{(4)}_x = \frac{v_1}{M}\sin\theta + \frac{2\dot{z}\dot\theta}{M}\cos\theta + \frac{v_2}{M}\cos\theta - \frac{z\dot\theta^2}{M}\sin\theta$$
+
+    **Dans $h^{(4)}_y$ :**
+
+    $$h^{(4)}_y = -\frac{v_1}{M}\cos\theta + \frac{2\dot{z}\dot\theta}{M}\sin\theta + \frac{z}{M}\cdot\frac{v_2}{z}\sin\theta + \frac{z\dot\theta^2}{M}\cos\theta$$
+
+    De même $\frac{z}{M}\cdot\frac{v_2}{z} = \frac{v_2}{M}$, donc :
+
+    $$h^{(4)}_y = -\frac{v_1}{M}\cos\theta + \frac{2\dot{z}\dot\theta}{M}\sin\theta + \frac{v_2}{M}\sin\theta + \frac{z\dot\theta^2}{M}\cos\theta$$
+
+
+    On regroupe par vecteurs directeurs :
+
+    $$\boxed{h^{(4)} = \frac{v_1}{M}\begin{pmatrix}\sin\theta\\-\cos\theta\end{pmatrix} + \frac{v_2 + 2\dot{z}\dot\theta}{M}\begin{pmatrix}\cos\theta\\\sin\theta\end{pmatrix} + \frac{z\dot\theta^2}{M}\begin{pmatrix}-\sin\theta\\\cos\theta\end{pmatrix}}$$
+
+    Les trois vecteurs directeurs qui apparaissent ont une belle interprétation géométrique :
+
+    - $(\sin\theta,\,-\cos\theta)^T$ : direction **axiale** du booster (de la base vers le nez)
+    - $(\cos\theta,\,\sin\theta)^T$ : direction **latérale** (perpendiculaire au corps)
+    - $(-\sin\theta,\,\cos\theta)^T$ : direction axiale **opposée**, liée à l'effet centripète $z\dot\theta^2$
+    """)
     return
 
 
@@ -2344,6 +2458,80 @@ def _(mo):
     $$
     h^{(4)} = u
     $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On cherche un système auxiliaire supplémentaire avec entrée $u = (u_1, u_2)$ et sortie $v = (v_1, v_2)$, tel qu'une fois branché, on obtienne $h^{(4)} = u$.
+
+    On repart du résultat établi :
+
+    $$h^{(4)} = \frac{v_1}{M}\begin{pmatrix}\sin\theta\\-\cos\theta\end{pmatrix} + \frac{v_2 + 2\dot{z}\dot\theta}{M}\begin{pmatrix}\cos\theta\\\sin\theta\end{pmatrix} + \frac{z\dot\theta^2}{M}\begin{pmatrix}-\sin\theta\\\cos\theta\end{pmatrix}$$
+
+    **Mise sous forme matricielle**
+
+    On réécrit $h^{(4)}$ comme un produit matrice-vecteur. En regroupant les termes en $v_1$ et $v_2$ d'un côté, et les termes connus de l'autre :
+
+    $$h^{(4)} = \frac{1}{M}\underbrace{\begin{pmatrix}\sin\theta & \cos\theta \\ -\cos\theta & \sin\theta\end{pmatrix}}_{=:\,P(\theta)}\begin{pmatrix}v_1 \\ v_2\end{pmatrix} + \frac{1}{M}\begin{pmatrix}-z\dot\theta^2\sin\theta + 2\dot{z}\dot\theta\cos\theta \\ z\dot\theta^2\cos\theta + 2\dot{z}\dot\theta\sin\theta\end{pmatrix}$$
+
+    que l'on écrit de façon compacte :
+
+    $$h^{(4)} = \frac{1}{M}P(\theta)\,v + \frac{1}{M}\begin{pmatrix}-z\dot\theta^2\sin\theta + 2\dot{z}\dot\theta\cos\theta \\ z\dot\theta^2\cos\theta + 2\dot{z}\dot\theta\sin\theta\end{pmatrix}$$
+
+    **Inversibilité de $P(\theta)$**
+
+    On calcule le déterminant de $P(\theta)$ :
+
+    $$\det P(\theta) = \sin\theta\cdot\sin\theta - \cos\theta\cdot(-\cos\theta) = \sin^2\theta + \cos^2\theta = 1$$
+
+    La matrice $P(\theta)$ est donc **inversible pour tout $\theta$**, et son inverse est :
+
+    $$P(\theta)^{-1} = \begin{pmatrix}\sin\theta & -\cos\theta \\ \cos\theta & \sin\theta\end{pmatrix}$$
+
+    On vérifie : $P(\theta)^{-1}P(\theta) = \begin{pmatrix}\sin^2\theta+\cos^2\theta & 0 \\ 0 & \sin^2\theta+\cos^2\theta\end{pmatrix} = I$. ✓
+
+    **Définition du système auxiliaire supplémentaire**
+
+    On veut $h^{(4)} = u$. Il suffit donc de choisir $v$ tel que :
+
+    $$\frac{1}{M}P(\theta)\,v + \frac{1}{M}\begin{pmatrix}-z\dot\theta^2\sin\theta + 2\dot{z}\dot\theta\cos\theta \\ z\dot\theta^2\cos\theta + 2\dot{z}\dot\theta\sin\theta\end{pmatrix} = u$$
+
+    On résout en $v$ en appliquant $M\,P(\theta)^{-1}$ des deux côtés :
+
+    $$\boxed{v = M\,P(\theta)^{-1}\left[u - \frac{1}{M}\begin{pmatrix}-z\dot\theta^2\sin\theta + 2\dot{z}\dot\theta\cos\theta \\ z\dot\theta^2\cos\theta + 2\dot{z}\dot\theta\sin\theta\end{pmatrix}\right]}$$
+
+    En développant explicitement avec $P(\theta)^{-1} = \begin{pmatrix}\sin\theta & -\cos\theta \\ \cos\theta & \sin\theta\end{pmatrix}$ :
+
+    $$v_1 = M(u_1\sin\theta - u_2\cos\theta) - (-z\dot\theta^2\sin\theta + 2\dot{z}\dot\theta\cos\theta)\sin\theta + (z\dot\theta^2\cos\theta + 2\dot{z}\dot\theta\sin\theta)\cos\theta$$
+
+    $$v_2 = M(u_1\cos\theta + u_2\sin\theta) - (-z\dot\theta^2\sin\theta + 2\dot{z}\dot\theta\cos\theta)\cos\theta - (z\dot\theta^2\cos\theta + 2\dot{z}\dot\theta\sin\theta)\sin\theta$$
+
+    En simplifiant les termes en $z\dot\theta^2$ et $\dot{z}\dot\theta$ (en utilisant $\sin^2\theta+\cos^2\theta=1$) :
+
+    $$\boxed{v_1 = M(u_1\sin\theta - u_2\cos\theta) + z\dot\theta^2}$$
+
+    $$\boxed{v_2 = M(u_1\cos\theta + u_2\sin\theta) - 2\dot{z}\dot\theta}$$
+
+    **Vérification**
+
+    On substitue $v_1$ et $v_2$ dans l'expression de $h^{(4)}$ :
+
+    $$h^{(4)} = \frac{1}{M}P(\theta)\begin{pmatrix}M(u_1\sin\theta - u_2\cos\theta)+z\dot\theta^2 \\ M(u_1\cos\theta+u_2\sin\theta)-2\dot{z}\dot\theta\end{pmatrix} + \frac{1}{M}\begin{pmatrix}-z\dot\theta^2\sin\theta+2\dot{z}\dot\theta\cos\theta\\z\dot\theta^2\cos\theta+2\dot{z}\dot\theta\sin\theta\end{pmatrix}$$
+
+    Le terme $M\,P(\theta)\,u'$ (avec $u' = P(\theta)^{-1}u$) redonne $Mu/M = u$, et tous les termes nonlinéaires se compensent exactement. On obtient bien :
+
+    $$\boxed{h^{(4)} = u}$$
+
+    **Conclusion**
+
+    La cascade des deux systèmes auxiliaires réalise une **linéarisation exacte par bouclage** : la dynamique entrée-sortie de $h$ est exactement celle de **quatre intégrateurs découplés**,
+
+    $$h^{(4)} = u,$$
+
+    indépendamment de $\theta$, $\dot\theta$, $z$, $\dot{z}$. Toute la nonlinéarité du booster est compensée algébriquement par le choix de $v$, et il ne reste plus qu'un système linéaire simple à commander.
     """)
     return
 
