@@ -2254,9 +2254,67 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Notre **centre de gravité** (CoM) se trouve aux coordonnées $(x,y)$.
+
+    Si l'on définit $\theta$ comme l'angle mesuré dans le sens anti-horaire par rapport à la verticale, le vecteur unitaire pointant vers le **haut de la fusée** (le côté opposé à la tuyère) est $(-\sin\theta, \cos\theta)$.
+
+    Si l'on remonte le long de cet axe sur une distance de $\ell/6$ (où $\ell$ est la longueur totale du système) depuis le centre de gravité, on obtient l'équation suivante :
+
+    $$h = \begin{pmatrix}x\\y\end{pmatrix} + \frac{\ell}{6}\begin{pmatrix}-\sin\theta\\\cos\theta\end{pmatrix} = \begin{pmatrix}x - (\ell/6)\sin\theta\\ y + (\ell/6)\cos\theta\end{pmatrix}$$
+
+    ## Interprétation Visuelle
+
+    Le point $h$ correspond au point situé exactement à **un tiers (1/3) du sommet du booster** (soit une distance de $\ell/6$ au-dessus du centre de gravité en direction du sommet).
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 First and Second-Order Derivatives
 
     Compute $\dot{h}$ as a function of $\dot{x}$, $\dot{y}$, $\theta$ and $\dot{\theta}$ (and constants) and then $\ddot{h}$ as a function of $\theta$ and $z$ (and constants) when the auxiliary system is plugged in the booster.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Par la règle de dérivation en chaîne :
+
+    $$\dot{h}_x = \dot{x} - \frac{\ell}{6}\cos\theta\cdot\dot\theta = v_x - \frac{\ell}{6}\omega\cos\theta$$
+
+    $$\dot{h}_y = \dot{y} - \frac{\ell}{6}(-\sin\theta)\cdot\dot\theta = v_y - \frac{\ell}{6}\omega\sin\theta$$
+
+    En notation matricielle :
+
+    $$\dot{h} = \begin{bmatrix} v_x \\ v_y \end{bmatrix} - \frac{\ell}{6}\omega \begin{bmatrix} \cos\theta \\ \sin\theta \end{bmatrix}$$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On dérive à nouveau. En utilisant les équations du mouvement $M\dot{v}_x = f_x$ et $M\dot{v}_y = f_y - Mg$ :
+
+    $$\ddot{h}_x = \dot{v}_x - \frac{\ell}{6}\left(\dot\omega\cos\theta - \omega^2\sin\theta\right)$$
+
+    $$\ddot{h}_y = \dot{v}_y - \frac{\ell}{6}\left(\dot\omega\sin\theta + \omega^2\cos\theta\right)$$
+
+    En substituant $M\dot{v}_x = f_x$, $M\dot{v}_y = f_y - Mg$, et $J\dot\omega = -\frac{\ell}{2}f\sin\phi$ :
+
+    $$\ddot{h} = \frac{1}{M}\begin{bmatrix}f_x \\ f_y\end{bmatrix} - \begin{bmatrix}0 \\ g\end{bmatrix} - \frac{\ell}{6}\dot\omega\begin{bmatrix}\cos\theta \\ \sin\theta\end{bmatrix} + \frac{\ell\omega^2}{6}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix}$$
+
+    Or $\dot\omega = -\frac{f\ell}{2J}\sin\phi$. En substituant le système auxiliaire $(f_x, f_y) = R(\theta-\pi/2)\begin{bmatrix}z - M\ell\omega^2/6 \\ M\ell v_2/(6z)\end{bmatrix}$ et en notant que $J = M\ell^2/12$ donc $\frac{\ell}{2J} = \frac{6}{M\ell}$ :
+
+    Après calcul (développement de $R(\theta-\pi/2)$ et regroupement des termes en $\omega^2$), on obtient la forme remarquable :
+
+    $$\boxed{\ddot{h} = \frac{z}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix} + \frac{v_2}{6}\begin{bmatrix}\cos\theta \\ \sin\theta\end{bmatrix} - \begin{bmatrix}0 \\ g\end{bmatrix}}$$
+
+    **Interprétation :** Les termes en $\omega^2$ se simplifient exactement grâce au choix judicieux de $h$. C'est la raison profonde pour laquelle ce point particulier du booster est choisi comme sortie : il annule les **termes centrifuges** dans la dynamique de sortie.
     """)
     return
 
@@ -2268,6 +2326,11 @@ def _(mo):
 
     Compute the third derivative $h^{(3)}$ of $h$ as a function of $\theta$ and $z$ (and constants) and then the fourth derivative $h^{(4)}$ of $h$ with respect to time as a function of $\theta$, $\dot{\theta}$, $z$, $\dot{z}$, $v$ (and constants) when the auxiliary system is on.
     """)
+    return
+
+
+@app.cell
+def _():
     return
 
 
