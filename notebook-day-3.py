@@ -154,7 +154,7 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ### 🔓 Solution
@@ -198,7 +198,7 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     ### 🔓 Solution
@@ -1086,35 +1086,65 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md("""
+    ### 🔓 Solution
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(r"""
-    Un système est à l'équilibre si et seulement si toutes ses accélérations sont parfaitement nulles. On pose donc logiquement $\ddot{x} = 0$, $\ddot{y} = 0$ et $\ddot{\theta} = 0$ à partir de nos équations du mouvement, et on résout le système.
+    Our state is $s = (x, v_x, y, v_y,\theta, \omega)$ and the system is governed by
+    $\dot{s} = F(s, f, \phi)$ with
+    $$
+    F(s, f, \phi) = \begin{bmatrix}
+    v_x \\ -(f / M) \sin (\theta + \phi) \\
+    v_y \\ +(f / M) \cos(\theta +\phi) - g \\
+    \omega \\ - (f / J) (\ell/2) \sin \phi
+    \end{bmatrix}
+    $$
+    The equilibria are characterized by $F(s, f, \phi) = 0$. We obtain directly that
+    $v_x = v_y = 0$ and $\omega = 0$. We also extract the two equations
 
-    **1. Équilibre sur l'axe horizontal ($x$) :**
-    L'équation nous donne :
-    $$M\ddot{x} = -f\sin(\theta+\phi) = 0$$
-    On a $f > 0$. Par conséquent, c'est le terme en sinus qui doit s'annuler, soit $\sin(\theta+\phi) = 0$.
-    Sachant que les angles sont physiquement contraints par $|\theta| < \pi/2$ et $|\phi| < \pi/2$, on a l'encadrement $-\pi < \theta+\phi < \pi$. Sur cet intervalle, la seule solution possible pour annuler le sinus est :
-    $$\theta + \phi = 0$$
-
-    **2. Équilibre sur l'axe vertical ($y$) :**
-    On passe à l'altitude :
-    $$M\ddot{y} = f\cos(\theta+\phi) - Mg = 0$$
-    Puisque l'on vient de démontrer que $\theta + \phi = 0$, le cosinus vaut tout simplement 1. L'équation se simplifie de manière triviale :
-    $$f = Mg$$
-    La physique est bien faite : pour ne pas tomber, la poussée doit exactement compenser le poids du lanceur.
-
-    **3. Équilibre en rotation ($\theta$) :**
-    Enfin, pour éviter que le booster ne se mette à tournoyer sur lui-même :
-    $$J\ddot{\theta} = -\frac{f\ell}{2}\sin(\phi) = 0$$
-    Comme $f = Mg > 0$ et que $\ell$ est une longueur non nulle, c'est obligatoirement $\sin(\phi)$ qui s'annule. Avec la contrainte $|\phi| < \pi/2$, on en déduit directement :
-    $$\phi = 0$$
-    Et comme on avait établi plus haut que $\theta + \phi = 0$, on trouve inévitablement $\theta = 0$.
-
-    **Conclusion sur l'état d'équilibre :**
-    Sans grande surprise, la seule configuration permettant un vol stationnaire (Hovering) correspond à un lanceur parfaitement vertical, sans braquage de la tuyère, avec une poussée égale à son poids. L'unique point d'équilibre $(x_e, y_e, \theta_e, f_e, \phi_e)$ est donc caractérisé par :
-    $$s = (x, 0, y, 0, 0, 0),$$
-    $$f = Mg \quad ; \quad \theta = 0 \quad ; \quad \phi = 0$$
-    *(Note : les positions $x$ et $y$ peuvent être quelconques, le système est invariant par translation spatiale).*
+    $$
+    \begin{bmatrix}
+    -(f / M) \sin (\theta + \phi) \\
+    +(f / M) \cos(\theta +\phi)
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    0 \\
+    g
+    \end{bmatrix}
+    $$
+    which holds if when $|\theta| < \pi/2$ and $|\phi| < \pi/2$ and only if
+    $\theta = \phi = 0$ and $f = M g$. The final equation is then satisfied if and only if
+    $\omega = 0$. Finally, we obtain the equilibria as:
+    $$
+    \begin{bmatrix}
+    x \\
+    v_x \\
+    y \\
+    v_y \\
+    \theta \\
+    \omega \\
+    f \\
+    \phi
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    ? \\
+    0 \\
+    ? \\
+    0 \\
+    0 \\
+    0 \\
+    M g \\
+    0
+    \end{bmatrix}
+    $$
+    where $?$ stands for "any possible value".
     """)
     return
 
@@ -1132,37 +1162,30 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md("""
+    ### 🔓 Solution
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(r"""
-    On introduit nos variables d'erreur (les $\Delta$) autour du point d'équilibre stationnaire qu'on vient de trouver ($\theta_e = 0$, $f_e = Mg$, $\phi_e = 0$) :
-    $$x = x_e + \Delta x \quad ; \quad y = y_e + \Delta y \quad ; \quad \theta = \Delta\theta$$
-    $$f = Mg + \Delta f \quad ; \quad \phi = \Delta\phi$$
+    We have $\Delta \theta = \theta$, $\Delta \phi = \phi$ and $\Delta f = f - M g$. Given that
 
-    On injecte ça dans nos équations du mouvement en utilisant le développement de Taylor à l'ordre 1 (les approximations des petits angles $\sin(\epsilon) \approx \epsilon$ et $\cos(\epsilon) \approx 1$). Et surtout, on jette sans remords tous les termes d'ordre 2 (les produits de deux $\Delta$).
+    \begin{align*}
+    M \ddot{x} & = -f \sin (\theta + \phi) \\
+    M \ddot{y} & = +f \cos(\theta +\phi) - Mg \\
+    J \ddot{\theta} & = - f (\ell/2) \sin \phi
+    \end{align*}
 
-    **1. Dynamique horizontale ($\Delta x$) :**
-    $$M\Delta\ddot{x} = -(Mg + \Delta f)\sin(\Delta\theta + \Delta\phi)$$
-    Avec les petits angles, on a $\sin(\Delta\theta + \Delta\phi) \approx \Delta\theta + \Delta\phi$. En développant, on obtient le terme croisé $-\Delta f(\Delta\theta + \Delta\phi)$ qui est d'ordre 2. On le néglige allègrement :
-    $$M\Delta\ddot{x} \approx -Mg(\Delta\theta + \Delta\phi)$$
-    Ce qui nous donne :
-    $$\Delta\ddot{x} = -g(\Delta\theta + \Delta\phi)$$
+    and that for small values of $\alpha$, $\sin \alpha \approx \alpha$ and $\cos \alpha \approx 1$, we obtain:
 
-    **2. Dynamique verticale ($\Delta y$) :**
-    $$M\Delta\ddot{y} = (Mg + \Delta f)\cos(\Delta\theta + \Delta\phi) - Mg$$
-    Ici, $\cos(\Delta\theta + \Delta\phi) \approx 1$. L'équation devient merveilleusement simple, les $Mg$ s'annulent :
-    $$M\Delta\ddot{y} = Mg + \Delta f - Mg$$
-    $$\Delta\ddot{y} = \frac{1}{M}\Delta f$$
-
-    **3. Dynamique de rotation ($\Delta \theta$) :**
-    $$J\Delta\ddot{\theta} = -\frac{(Mg + \Delta f)\ell}{2}\sin(\Delta\phi)$$
-    On passe le sinus en $\Delta\phi$, et on développe. Là encore, on tombe sur un terme d'ordre 2 : $-\frac{\ell}{2}\Delta f \Delta\phi$ qu'on annule :
-    $$J\Delta\ddot{\theta} \approx -\frac{Mg\ell}{2}\Delta\phi$$
-    Ce qui donne :
-    $$\Delta\ddot{\theta} = -\frac{Mg\ell}{2J}\Delta\phi$$
-
-    **Bilan de la linéarisation :**
-    Les équations sont complètement découplées !
-    * La dynamique verticale ($\Delta y, \Delta v_y$) ne dépend QUE de la variation de poussée $\Delta f$.
-    * La dynamique latérale et de rotation ($\Delta x, \Delta v_x, \Delta\theta, \Delta\omega$) ne dépend QUE de l'angle de braquage de la tuyère $\Delta\phi$.
+    \begin{align*}
+    M (d/dt)^2 \Delta x &= - Mg (\Delta \theta + \Delta \phi)  \\
+    M (d/dt)^2 \Delta y &= \Delta f \\
+    J (d/dt)^2 \Delta \theta &= - (Mg \ell /2) \Delta \phi \\
+    \end{align*}
     """)
     return
 
@@ -1181,50 +1204,69 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    On commence par définir notre vecteur d'état $\Delta s$ (qui regroupe les positions et leurs dérivées) et notre vecteur d'entrée $u$ (nos commandes) :
-    $$\Delta s = \begin{pmatrix} \Delta x \\ \Delta v_x \\ \Delta y \\ \Delta v_y \\ \Delta\theta \\ \Delta\omega \end{pmatrix} \quad \text{et} \quad u = \begin{pmatrix} \Delta f \\ \Delta\phi \end{pmatrix}$$
-
-    En extrayant les coefficients de nos équations différentielles précédentes, on sépare la dynamique interne (Matrice $A$, $6 \times 6$) de l'impact des commandes (Matrice $B$, $6 \times 2$).
-
-    **La matrice de dynamique $A$ :**
-    On traduit simplement le fait que la dérivée d'une position est sa vitesse (les $1$), et on place notre seul terme de couplage interne (l'influence de $\theta$ sur l'accélération horizontale $\ddot{x}$) :
-    $$A = \begin{pmatrix} 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & -g & 0 \\ 0 & 0 & 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 & 0 & 0 \end{pmatrix}$$
-
-    **La matrice de commande $B$ :**
-    Elle map nos deux entrées ($\Delta f$ et $\Delta\phi$) sur les accélérations correspondantes. On retrouve bien le couplage de $\Delta\phi$ sur $\ddot{x}$ et le couple de rappel angulaire sur $\ddot{\theta}$ :
-    $$ B = \begin{pmatrix} 0 & 0 \\ 0 & -g \\ 0 & 0 \\ 1/M & 0 \\ 0 & 0 \\ 0 & -Mg \cdot l/(2J) \end{pmatrix}$$
-
-    **Note :**
-    Si on remplace avec nos valeurs numériques ($M=1$, $g=1$, $\ell=2$), le moment d'inertie du cylindre vaut $J = \frac{M\ell^2}{12} = \frac{1}{3}$.
-    Le coefficient $B_{5,1}$ (accélération angulaire) devient donc $-\frac{1 \cdot 1 \cdot 2}{2 \cdot (1/3)} = -3$. C'est physiquement cohérent.
+    ### 🔓 Solution
     """)
     return
 
 
-@app.cell
-def _(J, M, g, l, np):
-    # Matrices A et B du système linéarisé complet (6x6, 6x2)
-    A_full = np.array([
-        [0, 1, 0, 0, 0,  0],
-        [0, 0, 0, 0, -g, 0],
-        [0, 0, 0, 1, 0,  0],
-        [0, 0, 0, 0, 0,  0],
-        [0, 0, 0, 0, 0,  1],
-        [0, 0, 0, 0, 0,  0],
-    ], dtype=float)
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Note: remember that $J = (1/12) M \ell^2$.
 
-    B_full = np.array([
-        [0,      0],
-        [0,      -g],
-        [0,       0],
-        [1/M,     0],
-        [0,       0],
-        [0, -M*g*l/(2*J)],
-    ], dtype=float)
+    $$
+    A =
+    \begin{bmatrix}
+    0 & 1 & 0 & 0 & 0  & 0 \\
+    0 & 0 & 0 & 0 & -g & 0 \\
+    0 & 0 & 0 & 1 & 0  & 0 \\
+    0 & 0 & 0 & 0 & 0  & 0 \\
+    0 & 0 & 0 & 0 & 0  & 1 \\
+    0 & 0 & 0 & 0 & 0  & 0
+    \end{bmatrix}
+    \;\;\;
+    B =
+    \begin{bmatrix}
+    0 & 0\\
+    0 & -g\\
+    0 & 0\\
+    1/M & 0\\
+    0 & 0 \\
+    0 & -M g \ell/(2J)\\
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    0 & 0\\
+    0 & -g\\
+    0 & 0\\
+    1/M & 0\\
+    0 & 0 \\
+    0 & - 6 g / \ell\\
+    \end{bmatrix}
+    $$
+    """)
+    return
 
-    print("A ="); print(A_full)
-    print("\nB ="); print(B_full)
-    return A_full, B_full
+
+@app.cell(hide_code=True)
+def _(g, np):
+    A = np.zeros((6, 6))
+    A[0, 1] = 1.0
+    A[1, 4] = -g
+    A[2, 3] = 1.0
+    A[4, -1] = 1.0
+    A
+    return (A,)
+
+
+@app.cell(hide_code=True)
+def _(M, g, l, np):
+    B = np.zeros((6, 2))
+    B[ 1, 1]  = -g 
+    B[ 3, 0]  = 1/M
+    B[-1, 1] = -6 * g / l
+    B
+    return (B,)
 
 
 @app.cell(hide_code=True)
@@ -1240,72 +1282,17 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Pour déterminer la stabilité, il faut trouver les valeurs propres de $A$, c'est-à-dire les racines du polynôme caractéristique $\det(A - \lambda I) = 0$.
+    ### 🔓 Solution
 
-    On calcule $A - \lambda I$ :
-
-    $$A - \lambda I = \begin{pmatrix} -\lambda & 1 & 0 & 0 & 0 & 0 \\ 0 & -\lambda & 0 & 0 & -1 & 0 \\ 0 & 0 & -\lambda & 1 & 0 & 0 \\ 0 & 0 & 0 & -\lambda & 0 & 0 \\ 0 & 0 & 0 & 0 & -\lambda & 1 \\ 0 & 0 & 0 & 0 & 0 & -\lambda \end{pmatrix}$$
-
-    On remarque tout de suite que cette matrice est **triangulaire supérieure** (tous les termes sous la diagonale sont nuls). Et on sait que le déterminant d'une matrice triangulaire, c'est juste le produit des éléments diagonaux :
-
-    $$\det(A - \lambda I) = (-\lambda) \times (-\lambda) \times (-\lambda) \times (-\lambda) \times (-\lambda) \times (-\lambda) = (-\lambda)^6 = \lambda^6$$
-
-    Donc le polynôme caractéristique est $\lambda^6 = 0$, ce qui donne une **unique racine** $\lambda = 0$ de **multiplicité 6**.
-
-    **Donc :**
-
-    Un système linéaire $\dot{x} = Ax$ est asymptotiquement stable si et seulement si **toutes** les valeurs propres de $A$ ont une partie réelle strictement négative ($\text{Re}(\lambda_i) < 0$ pour tout $i$).
-
-    Ici, $\text{Re}(\lambda_i) = 0$ pour toutes les valeurs propres. Le système **n'est pas asymptotiquement stable**.
-
-    Physiquement, c'est assez intuitif : sans aucun contrôle ($\Delta f = 0$, $\Delta\phi = 0$), le booster est en chute libre. Une petite perturbation de vitesse entraîne un déplacement qui croît linéairement... le système dérive sans jamais revenir.
+    No, since $0$ is the only eigenvalue of $A$ and $0$ doesn't have a negative real part.
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    Imagine qu'on perturbe légèrement le booster autour de son point d'équilibre. Sans contrôleur pour corriger le tir, voici ce que nos équations linéarisées prédisent du comportement "naturel" du système :
-
-    **1. Perturbation de la vitesse horizontale ($\Delta\dot{x}$)** :
-
-
-    À l'équilibre parfait, on sait que $\Delta\theta = 0$ et $\Delta\phi = 0$. Notre équation de la dynamique latérale $\Delta\ddot{x} = -g(\Delta\theta + \Delta\phi)$ se réduit donc à :
-    $$\Delta\ddot{x} = 0 \implies \Delta\dot{x}(t) = \text{constante} = \Delta\dot{x}(0)$$
-    Ce qui nous donne, en intégrant pour la position :
-    $$\Delta x(t) = \Delta x(0) + \Delta\dot{x}(0) \cdot t$$
-    *Bilan physique :* Si le lanceur subit une petite pichenette latérale (un coup de vent par exemple), il va se mettre à dériver horizontalement à vitesse constante, indéfiniment. Il ne reviendra jamais de lui-même à sa position d'origine, car la matrice $A$ ne contient aucune force de rappel sur $x$.
-
-    **2. Perturbation de la vitesse verticale ($\Delta\dot{y}$)** :
-    Même punition sur l'axe vertical.
-
-    **3. Perturbation de l'inclinaison ($\Delta\theta$)** :
-
-
-    C'est la perturbation la plus critique. Si le booster s'incline légèrement ($\Delta\theta \neq 0$), alors la gravité commence à tirer le centre de masse hors de l'axe :
-    $$\Delta\ddot{x} = -g\Delta\theta$$
-    Le lanceur va donc commencer à accélérer horizontalement dans le sens de son inclinaison. Le système est instable en boucle ouverte. C'est exactement pour ça qu'on va devoir concevoir une loi de commande robuste !
-    """)
-    return
-
-
-@app.cell
-def _(A_full, la):
-    eigenvalues_A = la.eigvals(A_full)
-    print("Valeurs propres de A:", eigenvalues_A)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    Toutes les valeurs propres sont nulles (ou à partie réelle nulle)
-
-    Le système n'est PAS asymptotiquement stable : il est marginalement stable
-
-    C'est logique, c'est un intégrateur pur sans contrôle, le booster dérive
-    """)
+def _(A, la):
+    eigenvalues, eigenvectors = la.eig(A)
+    print(f"Eigenvalues of A: {eigenvalues}")
     return
 
 
@@ -1322,36 +1309,41 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    On utilise le **critère de Kalman** : le système $(A, B)$ est commandable si et seulement si
+    ### 🔓 Solution
 
-    $$\text{rang}\,[B \;,\; AB \;,\; A^2B \;,\; \cdots \;,\; A^{n-1}B] = n$$
-
-    avec $n = 6$ (dimension de l'état).
-
-    Si la matrice de commandabilité est de rang plein, alors on peut amener le système de n'importe quel état initial à n'importe quel état final en temps fini.
-
-    En pratique, on calcule numériquement :
+    The controllability matrix of the system is:
     """)
     return
 
 
-@app.cell
-def _(A_full, B_full, la, np):
-    def kalman_matrix(A, B):
-        n = A.shape[0]
-        cols = [np.linalg.matrix_power(A, k) @ B for k in range(n)]
-        return np.hstack(cols)
+@app.cell(hide_code=True)
+def _(A, B, np):
+    # Controllability
+    cs = np.column_stack
+    mp = np.linalg.matrix_power
+    KC = cs([mp(A, k) @ B for k in range(6)])
+    KC
+    return (KC,)
 
-    C_full = kalman_matrix(A_full, B_full)
-    rank_full = la.matrix_rank(C_full)
-    print(f"Rang de la matrice de commandabilité: {rank_full}")
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    and its rank is
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(KC, np):
+    int(np.linalg.matrix_rank(KC))
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Le rang vaut 6 = $n$ donc le système est commandable. On peut donc concevoir un retour d'état $u = -K\Delta s$ qui place les pôles de la boucle fermée où on veut.
+    which is equal to the state dimension, so the answer is yes, it's controllable.
     """)
     return
 
@@ -1373,71 +1365,48 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    On fixe $f = Mg$ et on ne s'intéresse qu'aux variables latérales $(\Delta x, \Delta v_x, \Delta\theta, \Delta\omega)$ :
-
-    Les équations linéarisées deviennent :
-    - $\dot{\Delta x} = \Delta v_x$
-    - $\dot{\Delta v_x} = -g\Delta\theta - g\Delta\phi = -\Delta\theta - \Delta\phi$
-    - $\dot{\Delta\theta} = \Delta\omega$
-    - $\dot{\Delta\omega} = -3\Delta\phi$
-
-    En forme matricielle :
-    $$X_{lat} = \begin{bmatrix} \Delta x \\ \Delta\dot{x} \\ \Delta\theta \\ \Delta\dot{\theta} \end{bmatrix}, \qquad U_{lat} = \Delta\phi$$
-
-    En extrayant les lignes/colonnes correspondantes du système complet, les équations linéarisées deviennent :
-
-    $$\Delta\ddot{x} = -g(\Delta\theta + \Delta\phi)$$
-    $$\Delta\ddot{\theta} = -\frac{Mg\ell}{2J}\Delta\phi$$
-
-    #### Nouvelles matrices $A$ et $B$
-
-    $$\dot{X}_{lat} = A_{lat} X_{lat} + B_{lat} U_{lat}$$
-
-    $$A_{lat} = \begin{pmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & -g & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 0 & 0 \end{pmatrix}, \qquad B_{lat} = \begin{pmatrix} 0 \\ -g \\ 0 \\ -\dfrac{Mg\ell}{2J} \end{pmatrix}$$
+    ### 🔓 Solution
     """)
     return
 
 
 @app.cell
-def _(J, M, g, l, np):
+def _(g, l, np):
     A_lat = np.array([
-        [0, 1, 0, 0],
-        [0, 0, -g, 0],
-        [0, 0, 0, 1],
-        [0, 0, 0, 0],
-    ])
+        [0, 1, 0, 0], 
+        [0, 0, -g, 0], 
+        [0, 0, 0, 1], 
+        [0, 0, 0, 0]], dtype=np.float64)
+    B_lat = np.array([[0, -g, 0, - 6 * g / l]]).T
 
-    B_lat = np.array([
-        [0],
-        [-g],
-        [0],
-        [-M*g*l/ (2*J)],
-    ])
-
-    # Matrice de contrôlabilité :
-    C_lat = np.hstack([np.linalg.matrix_power(A_lat, i) @ B_lat for i in range(4)])
-
-    print("Matrice de contrôlabilité :")
-    print(C_lat)
-    print(f"\nRang : {np.linalg.matrix_rank(C_lat)}")
+    print("A_lat:")
+    print(A_lat)
+    print("B_lat:")
+    print(B_lat)
     return A_lat, B_lat
+
+
+@app.cell(hide_code=True)
+def _(A_lat, B_lat, np):
+    # Controllability
+    _cs = np.column_stack
+    _mp = np.linalg.matrix_power
+    KC_lat = _cs([_mp(A_lat, k) @ B_lat for k in range(6)])
+    KC_lat
+    return (KC_lat,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Résultat
-
-    $$\boxed{\text{rank}(\mathcal{C}_{lat}) = 4 = n}$$
-
-    **Le système latéral réduit est contrôlable.**
-
-    Avec une seule entrée $\Delta\phi$, on peut tout contrôler car les effets se propagent en cascade :
-
-    $$\Delta\phi \longrightarrow \Delta\ddot{\theta} \longrightarrow \Delta\theta \longrightarrow \Delta\ddot{x} \longrightarrow \Delta x$$
-
-    Incliner le moteur fait pivoter le booster, ce qui crée une force horizontale, ce qui déplace $x$. Un seul actionneur suffit à atteindre les 4 états.
+    This reduced system of dimension 4 is controllable since the rank of its controllability matrix is 4:
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(KC_lat, np):
+    np.linalg.matrix_rank(KC_lat)
     return
 
 
@@ -1458,45 +1427,60 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Avec $\Delta\phi = 0$ (pas de contrôle), les équations se simplifient :
-
-    1. $\dot{\Delta\omega} = -3 \times 0 = 0$ → $\Delta\omega(t) = \Delta\omega(0) = 0$ (pas de couple = pas d'accélération angulaire)
-    2. $\dot{\Delta\theta} = \Delta\omega = 0$ → $\Delta\theta(t) = \Delta\theta(0) = \pi/4$ (l'angle ne bouge pas)
-    3. $\dot{\Delta v_x} = -\Delta\theta = -\pi/4$ → $\Delta v_x(t) = -(\pi/4) \cdot t$ (accélération horizontale constante)
-    4. $\dot{\Delta x} = \Delta v_x$ → $\Delta x(t) = -(\pi/4) \cdot t^2/2$ (dérive quadratique)
+    ### 🔓 Solution
     """)
     return
 
 
-@app.cell
-def _(A_lat, B_lat, np, plt, sci):
-    def sim_linear_lat(A, B, x0, K_ctrl, t_span, t_eval):
-        def rhs(t, x):
-            u = -K_ctrl @ x
-            return (A @ x + B @ u).flatten()
-        r = sci.solve_ivp(rhs, t_span, x0, t_eval=t_eval, rtol=1e-10, atol=1e-10)
-        return r.t, r.y
+@app.cell(hide_code=True)
+def _(g, l, np):
+    def make_fun_lat(phi):
+        def fun_lat(t, state):
+            x, dx, theta, dtheta = state
+            phi_ = phi(t, state)
+            d2x = -g * (theta + phi_)
+            d2theta = - 6 * g / l * phi_
+            return np.array([dx, d2x, dtheta, d2theta])
 
-    t_eval = np.linspace(0, 20, 1000)
-    x0_ff = [0.0, 0.0, np.pi/4, 0.0]  
-    K_zero = np.zeros((1, 4))
+        return fun_lat
 
-    t_ff, y_ff = sim_linear_lat(A_lat, B_lat, x0_ff, K_zero, [0, 20], t_eval)
+    return (make_fun_lat,)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    axes[0].plot(t_ff, y_ff[0]); axes[0].set_title(r"$\Delta x(t)$"); axes[0].grid(True)
-    axes[0].set_xlabel("t (s)")
-    axes[1].plot(t_ff, y_ff[2]); axes[1].set_title(r"$\Delta	heta(t)$"); axes[1].grid(True)
-    axes[1].set_xlabel("t (s)")
-    plt.tight_layout()
-    plt.show()
-    return (sim_linear_lat,)
+
+@app.cell(hide_code=True)
+def _(make_fun_lat, mo, np, plt, sci):
+    def lin_sim_1():
+        def phi(t, state):
+            return 0.0
+
+        f_lat = make_fun_lat(phi)
+        t_span = [0, 10]
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+        r = sci.solve_ivp(
+            fun=f_lat, y0=state_0, t_span=t_span, dense_output=True
+        )
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        sol_t = r.sol(t)
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        ax1.plot(t, sol_t[0], label=r"$x(t)$")
+        ax1.grid(True)
+        ax1.legend()
+        ax2.plot(t, sol_t[2], label=r"$\theta(t)$")
+        ax2.grid(True)
+        ax2.set_xlabel(r"time $t$")
+        ax2.legend()
+        return mo.center(fig)
+
+
+    lin_sim_1()
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    C'est assez logique quand on y pense : le booster est penché à 45°, la composante horizontale de la gravité le pousse de côté, mais personne ne corrige l'angle. Du coup l'angle reste figé et la position dérive de plus en plus vite.
+    - Since the reactor pushes (with a constant force) in the axis of the booster ($\phi=0$) and the initial title velocity $\omega = \dot{\theta}$ is zero, it's sensible that the title $\theta$ stays constant. That explains the second graph.
+    - On the other hand, the constant projected force on the $x$-axis drives a constant acceleration which is towards the left since the initial tilt is positive. That explain the first graph.
     """)
     return
 
@@ -1544,119 +1528,203 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md("""
+    ### 🔓 Solution
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(r"""
-    On a:
-    $K = [0, 0, k_\theta, k_{\dot\theta}]$ donc :
+    We try first a controller that corrects using only $\Delta \theta$ since it it's the simples think we can think of (a controller based only on the derivative would not achieve $\Delta \theta(t) \to 0$ since it would only knows $\Delta \theta(t)$ up to a constant). When $\Delta \theta > 0$, we want the reactor to be oriented on the right ($\Delta \phi > 0$) to compensate for this trend.
 
-    $$\Delta\phi(t) = -k_\theta \Delta\theta(t) - k_{\dot\theta} \Delta\dot{\theta}(t)$$
+    Hence it makes sens to start for something simple such as
+    $\Delta \phi =  \Delta \theta$, which corresponds to
 
-    On n'agit que sur $\theta$ et $\dot\theta$ (on ignore $x$ pour l'instant). En substituant dans la dynamique angulaire :
+    $$
+    K =
+    \begin{bmatrix}
+    0 & 0 & -1 & 0
+    \end{bmatrix}
+    \in \mathbb{R}^{4\times 1}
+    $$
 
-    $$\Delta\ddot\theta = -\frac{Mg\ell}{2J}\Delta\phi = \frac{Mg\ell}{2J}\left(k_\theta \Delta\theta + k_{\dot\theta}\Delta\dot\theta\right)$$
+    and
 
-    Posons $\alpha = \frac{Mg\ell}{2J} = 3$ avec nos constantes. L'équation devient :
+    $$
+    \Delta \phi(t) = - K \cdot
+    \begin{bmatrix}
+    \Delta x(t) \\
+    \Delta \dot{x}(t) \\
+    \Delta \theta(t) \\
+    \Delta \dot{\theta}(t)
+    \end{bmatrix} \in \mathbb{R}
+    $$
 
-    $$\Delta\ddot\theta - \alpha k_{\dot\theta}\,\Delta\dot\theta - \alpha k_\theta\,\Delta\theta = 0$$
-
-    C'est un *oscillateur du second ordre*. On identifie avec la forme standard $\ddot q + 2\zeta\omega_n \dot q + \omega_n^2 q = 0$ :
-
-    $$\omega_n^2 = -\alpha k_\theta \implies k_\theta < 0$$
-    $$2\zeta\omega_n = -\alpha k_{\dot\theta} \implies k_{\dot\theta} < 0$$
-
-    Pour converger en ~20s, on veut $\omega_n \approx 0.3$ rad/s et $\zeta \approx 1$ (critiquement amorti) :
-
-    $$k_\theta = -\frac{\omega_n^2}{\alpha} = -\frac{0.09}{3} = -0.03$$
-    $$k_{\dot\theta} = -\frac{2\zeta\omega_n}{\alpha} = -\frac{0.6}{3} = -0.2$$
-
-
-    en effet:
-
-    L'équation de $\Delta\theta$ en boucle fermée est :
-
-    $$\Delta\ddot\theta + 2\zeta\omega_n,\Delta\dot\theta + \omega_n^2,\Delta\theta = 0$$
-
-    La solution générale (pour $\zeta = 1$, cas critique) est :
-
-    $$\Delta\theta(t) = (A + Bt)e^{-\omega_n t}$$
-
-    Le terme $e^{-\omega_n t}$ contrôle la vitesse de convergence.
-
-    La constante de temps du système est $\tau = \dfrac{1}{\omega_n}$. On considère que le système a convergé après environ $5\tau$ (règle empirique : à $5\tau$, on est à $e^{-5} \approx 0.7%$ de la valeur initiale) :
-
-    $$t_{\text{convergence}} \approx 5\tau = \frac{5}{\omega_n}$$
-
-    On veut converger en $\sim 20$ s :
-
-    $$\frac{5}{\omega_n} = 20 \implies \omega_n = \frac{5}{20} = 0.25 \approx 0.3 \text{ rad/s}$$
-
-    $\zeta = 1$ implique un retour le plus rapide sans dépasser 0
+    Let's make a simulation out of this!
     """)
     return
 
 
 @app.cell
-def _(A_lat, J, M, g, l, np, plt, sci):
-    def simulate_manually_tunned():
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci):
+    def lin_sim_k1():
 
-        alpha = M * g * l / (2 * J)    # = 3.0
-        B = np.array([0, -g, 0, -alpha])   # vecteur colonne (4,)
+        K = np.array([0.0, 0.0, -1.0, 0.0])
 
-        X0     = np.array([0.0, 0.0, np.pi/4, 0.0])
-        t_span = [0, 40]
-        t_eval = np.linspace(0, 40, 2000)
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
 
-        # Gains à tester (k_theta, k_dtheta, label, couleur)
-        # Choix guidé par la forme standard : ωₙ² = α|k_θ|, 2ζωₙ = α|k_θ̇|
-        # Cible : ωₙ ≈ 0.3 rad/s, ζ ≈ 1 (amorti critique) → convergence ~20s
-        # Voir l'analyse ci*dessous
-        gains = [
-            (-0.03, -0.20, "iter 1 — ωₙ=0.30, ζ=1.0",     "royalblue"),
-            (-0.05, -0.30, "iter 2 — ωₙ=0.39, ζ=1.0",     "darkorange"),
-            (-0.08, -0.35, "iter 3 — ωₙ=0.49, ζ=0.71",    "seagreen"),
-            (-0.05, -0.25, "iter 4 — ωₙ=0.39, ζ=0.96",    "crimson"),
-            (-0.03, -0.1, "iter 4 — ωₙ=0.3, ζ=0.5",    "yellow"),
-        ]
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
 
-        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-        for k_th, k_dth, label, color in gains:
-            K = np.array([0, 0, k_th, k_dth])
-        
-            def closed_loop(t, X, K=K):
-                delta_phi = -K @ X
-                return A_lat @ X + B * delta_phi
+        def phi(t, state):
+            return -K.dot(state)
 
-            sol = sci.solve_ivp(closed_loop, t_span, X0,
-                            dense_output=True, rtol=1e-10, atol=1e-10)
-            X_t   = sol.sol(t_eval)
-            x_t   = X_t[0]
-            th_t  = X_t[2]
-            dth_t = X_t[3]
-            phi_t = -(K[2] * th_t + K[3] * dth_t)
-            axes[0].plot(t_eval, np.degrees(th_t),  label=label, color=color)
-            axes[1].plot(t_eval, np.degrees(phi_t), label=label, color=color)
-            axes[2].plot(t_eval, x_t,               label=label, color=color)
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
 
-        for ax in axes[:2]:
-            ax.axhline( 90, color="grey", ls=":", lw=1)
-            ax.axhline(-90, color="grey", ls=":", lw=1, label="±90° (limite)")
-        titles  = [r"$\Delta\theta(t)$ (degrés)",
-                   r"$\Delta\phi(t)$  (degrés)",
-                   r"$\Delta x(t)$    (m)"]
-        ylabels = ["degrés", "degrés", "m"]
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
 
-        for ax, title, ylabel in zip(axes, titles, ylabels):
-            ax.axhline(0, color="black", ls="--", lw=0.8)
-            ax.set_title(title)
-            ax.set_xlabel("temps (s)")
-            ax.set_ylabel(ylabel)
-            ax.legend(fontsize=7)
-            ax.grid(True)
 
-        plt.suptitle("Contrôleur manuel — itérations sur les gains", fontsize=12)
-        plt.tight_layout()
-        return plt.show()
+    lin_sim_k1()
+    return
 
-    simulate_manually_tunned()
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Unfortunately that doesn't work, we have introduced an oscillatory dynamics.
+
+    To correct that, we may introduce some additionial "friction" that prevents our compensation to kick in too fast and end up the control
+    $\Delta \phi = \Delta \theta + \beta (d \Delta \theta /dt)$, for some $\beta > 0$, which corresponds to
+
+    $$
+    K =
+    \begin{bmatrix}
+    0 & 0 & -1 & -\beta
+    \end{bmatrix}
+    \in \mathbb{R}^{4\times 1}
+    $$
+
+    Experimentally (see below), anything between $\beta = 0.1$ and $\beta = 5.0$ seems to satisfy the specification. The closed-loop dynamics is slower need $0.1$ and faster near $5.0$.
+
+    In any case, there is a permament drift which is induced on $\Delta x$, which does not converge to $0$. This is corroborated by a double eigenvalue at $0$, which proves that our closed-loop dynamics is **not** asymptotically stable.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci):
+    def lin_sim_k2():
+
+        K = np.array([0.0, 0.0, -1.0, -0.1])
+
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
+
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
+
+
+    lin_sim_k2()
+    return
+
+
+@app.cell
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci):
+    def lin_sim_k3():
+
+        K = np.array([0.0, 0.0, -1.0, -5.0])
+
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
+
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
+
+
+    lin_sim_k3()
     return
 
 
@@ -1701,61 +1769,182 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md("""
+    ### 🔓 Solution
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(r"""
-    On utilise `place_poles` pour placer les 4 pôles de $A_{lat} - B_{lat}K_{pp}$. Contrairement au contrôleur manuel, cette fois on veut aussi $\Delta x \to 0$, donc les 4 pôles doivent être dans le demi-plan gauche.
+    We decide to try to cluster all our eigenvalue near a single real (negative) value
+    $s$. If we want a convergence at 5% in 20 seconds at most, we know that $|\lambda|$
+    should be at least $3 / 20 = 0.15$.
 
-    Pour le placement de pôles, on a le choix entre des pôles réels ou complexes conjugués. Les deux sont valides, mais le comportement est différent :
-    - **Pôles réels** ($\lambda = -\sigma$) : la réponse est une décroissance exponentielle pure $e^{-\sigma t}$, sans oscillation. C'est "doux" mais parfois lent.
-    - **Pôles complexes** ($\lambda = -\sigma \pm j\omega_d$) : la réponse est une exponentielle amortie multipliée par une sinusoïde : $e^{-\sigma t}\cos(\omega_d t + \varphi)$. Le système oscille un peu autour de l'équilibre avant de se stabiliser.
-    La partie réelle $-\sigma$ contrôle la **vitesse de convergence** (constante de temps $\tau = 1/\sigma$), et la partie imaginaire $\omega_d$ contrôle la **fréquence d'oscillation**.
-    L'avantage des pôles complexes, c'est qu'on peut avoir une convergence plus rapide pour un effort de commande comparable.
+    Experimentally however this is a bit slow to converge (see below), the setup is better if we pick a faster dynamics, to have our eigenvalues clustered around $-0.5$ for example.
 
-
-    **Contrainte importante :** les pôles complexes doivent toujours venir par **paires conjuguées** ($\lambda$ et $\bar{\lambda}$), sinon le gain $K$ ne serait pas réel et on aurait une commande $\phi$ complexe, ce qui n'a pas de sens physique.
-    On essaie ici :
-    $$\lambda_{1,2} = -0.5 \pm 0.1j, \qquad \lambda_{3,4} = -0.3 \pm 0.1j$$
-    d'abord, puis on ajuste.
+    There is actually quite a range of locations that work, but around $-0.1$, we start compensating too fast and to violate the constraint on the maximal value of $\phi$.
     """)
     return
 
 
 @app.cell
-def _(A_lat, B_lat, la, np, plt, sim_linear_lat):
-    from scipy.signal import place_poles
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci, scipy):
+    def lin_sim_3():
+        K = scipy.signal.place_poles(
+            A=A_lat,
+            B=B_lat,
+            poles=-0.15 * np.array([1.0, 1.01, 1.02, 1.03]),
+        ).gain_matrix.squeeze()
 
-    desired_poles = np.array([-0.5+0.1j, -0.5-0.1j, -0.3+0.1j, -0.3-0.1j])
-    _result_pp = place_poles(A_lat, B_lat, desired_poles)
-    K_pp = _result_pp.gain_matrix
-    print("K_pp =", K_pp)
-    print("Pôles obtenus:", la.eigvals(A_lat - B_lat @ K_pp))
-    X0     = np.array([0.0, 0.0, np.pi/4, 0.0])
-    _t_eval = np.linspace(0, 60, 3000)
-    _t_pp, _y_pp = sim_linear_lat(A_lat, B_lat, X0, K_pp, [0, 60], _t_eval)
-    _phi_pp = -(K_pp @ _y_pp).flatten()
+        print(f"K = {K}")
 
-    _fig, _axes = plt.subplots(1, 3, figsize=(15, 4))
-    _axes[0].plot(_t_pp, _y_pp[2]); _axes[0].set_title(r"$\Delta\theta(t)$"); _axes[0].grid(True)
-    _axes[0].axhline(0, color='k', ls='--', lw=0.5)
-    _axes[1].plot(_t_pp, _y_pp[0]); _axes[1].set_title(r"$\Delta x(t)$"); _axes[1].grid(True)
-    _axes[1].axhline(0, color='k', ls='--', lw=0.5)
-    _axes[2].plot(_t_pp, _phi_pp); _axes[2].set_title(r"$\Delta\phi(t)$"); _axes[2].grid(True)
-    _axes[2].axhline(np.pi/2, color='r', ls='--')
-    _axes[2].axhline(-np.pi/2, color='r', ls='--')
-    plt.suptitle("Pole Placement Controller")
-    plt.tight_layout(); plt.show()
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
 
-    print(f"|theta| < pi/2 ? {np.all(np.abs(_y_pp[2]) < np.pi/2)}")
-    print(f"|phi| < pi/2 ? {np.all(np.abs(_phi_pp) < np.pi/2)}")
-    print(f"Asymptotiquement stable ? {np.all(np.real(la.eigvals(A_lat - B_lat @ K_pp)) < 0)}")
-    return K_pp, X0
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
 
 
-@app.cell
-def _():
+    lin_sim_3()
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci, scipy):
+    Kpp = scipy.signal.place_poles(
+        A=A_lat,
+        B=B_lat,
+        poles=-0.5 * np.array([1.0, 1.01, 1.02, 1.03]),
+    ).gain_matrix.squeeze()
+
+
+    def lin_sim_32():
+        K = Kpp
+        print(f"K = {K}")
+
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
+
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
+
+
+    lin_sim_32()
+    return (Kpp,)
+
+
+@app.cell
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci, scipy):
+    def lin_sim_33():
+        K = scipy.signal.place_poles(
+            A=A_lat,
+            B=B_lat,
+            poles=-1.0 * np.array([1.0, 1.01, 1.02, 1.03]),
+        ).gain_matrix.squeeze()
+
+        print(f"K = {K}")
+
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
+
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
+
+
+    lin_sim_33()
+    return
+
+
+@app.cell
 def _(mo):
     mo.md(r"""
     ## 🧩 Controller Tuned with Optimal Control
@@ -1769,56 +1958,160 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
+    mo.md("""
+    ### 🔓 Solution
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     mo.md(r"""
-    Au lieu de choisir les pôles à la main, on formule un problème d'optimisation. On minimise le coût :
-    $$J = \int_0^\infty \left(\Delta s^T Q \Delta s + \Delta\phi^T R \Delta\phi\right) dt$$
+    The basic optimal control design, with
 
-    L'idée c'est :
-    - **$Q$ grand** → on pénalise les écarts d'état, le système converge vite
-    - **$R$ grand** → on pénalise l'effort de commande, $\phi$ reste petit
-    - C'est un compromis entre performance et effort
+    $$
+    Q = \begin{bmatrix}
+    1 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 \\
+    0 & 0 & 1 & 0 \\
+    0 & 0 & 0 & 1
+    \end{bmatrix},
+    $$
 
-    On résout l'**équation algébrique de Riccati** :
-    $$A^T P + PA - PBR^{-1}B^TP + Q = 0$$
+    and
 
-    Et le gain optimal est $K_{oc} = R^{-1}B^TP$..
-
-    On commence avec $Q = \text{diag}(1, 1, 10, 1)$ et $R = 100$, puis on ajuste.
+    $$
+    R = \begin{bmatrix}
+    1
+    \end{bmatrix},
+    $$
+    almost makes the job, except that it is a bit too fast and that results initially in large values of the angle $\phi$.
     """)
     return
 
 
 @app.cell
-def _(A_lat, B_lat, X0, la, np, plt, sim_linear_lat):
-    from scipy.linalg import solve_continuous_are
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci, scipy):
+    def lin_sim_4():
+        Q = np.eye(4,4)
+        print("Q:", Q)
+        R = np.eye(1) #10*l**2 * np.eye(1)
+        print("R:", R)
+        Pi = scipy.linalg.solve_continuous_are(
+            a=A_lat, 
+            b=B_lat, 
+            q=Q, 
+            r=R
+        )
+        Koc = (np.linalg.inv(R) @ B_lat.T @ Pi).squeeze()
+
+        K = Koc
+        print(f"K = {K}")
+
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
+
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
 
 
-    Q_lqr = np.diag([1.0, 1.0, 10.0, 1.0])
-    R_lqr = np.array([[100.0]])
-    P = solve_continuous_are(A_lat, B_lat, Q_lqr, R_lqr)
-    K_oc = la.inv(R_lqr) @ B_lat.T @ P
-    print("K_oc =", K_oc)
-    print("Pôles LQR:", la.eigvals(A_lat - B_lat @ K_oc))
+    lin_sim_4()
+    return
 
-    t_eval_lqr = np.linspace(0, 60, 3000)
-    t_oc, y_oc = sim_linear_lat(A_lat, B_lat, X0, K_oc, [0, 60], t_eval_lqr)
-    phi_oc = -(K_oc @ y_oc).flatten()
 
-    fig_lqr, axes_lqr = plt.subplots(1, 3, figsize=(15, 4))
-    axes_lqr[0].plot(t_oc, y_oc[2]); axes_lqr[0].set_title(r"$\Delta\theta(t)$"); axes_lqr[0].grid(True)
-    axes_lqr[0].axhline(0, color='k', ls='--', lw=0.5)
-    axes_lqr[1].plot(t_oc, y_oc[0]); axes_lqr[1].set_title(r"$\Delta x(t)$"); axes_lqr[1].grid(True)
-    axes_lqr[1].axhline(0, color='k', ls='--', lw=0.5)
-    axes_lqr[2].plot(t_oc, phi_oc); axes_lqr[2].set_title(r"$\Delta\phi(t)$"); axes_lqr[2].grid(True)
-    axes_lqr[2].axhline(np.pi/2, color='r', ls='--')
-    axes_lqr[2].axhline(-np.pi/2, color='r', ls='--')
-    plt.suptitle("LQR Controller")
-    plt.tight_layout(); plt.show()
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    A second design with the same $Q$ but $R$ increased by $100$ (to reduce the activation of the input at the price of some convergence speed) performs adequately!
+    """)
+    return
 
-    print(f"|theta| < pi/2 ? {np.all(np.abs(y_oc[2]) < np.pi/2)}")
-    print(f"|phi| < pi/2 ? {np.all(np.abs(phi_oc) < np.pi/2)}")
-    print(f"Asymptotiquement stable ? {np.all(np.real(la.eigvals(A_lat - B_lat @ K_oc)) < 0)}")
-    return (K_oc,)
+
+@app.cell
+def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci, scipy):
+    Q = np.eye(4,4)
+    print("Q:", Q)
+    R = 100 * np.eye(1)
+    print("R:", R)
+    Pi = scipy.linalg.solve_continuous_are(
+        a=A_lat, 
+        b=B_lat, 
+        q=Q, 
+        r=R
+    )
+    Koc = (np.linalg.inv(R) @ B_lat.T @ Pi).squeeze()
+
+    def lin_sim_42():
+        K = Koc
+        print(f"K = {K}")
+
+        print(
+            "eigenvalues:",
+            np.linalg.eig(
+                A_lat - B_lat.reshape((-1, 1)) @ K.reshape((1, -1))
+            ).eigenvalues,
+        )
+
+        t_span = [0, 20.0]
+        t = np.linspace(t_span[0], t_span[1], 1000)
+        state_0 = [0, 0, 45 * np.pi / 180.0, 0]
+
+        def phi(t, state):
+            return -K.dot(state)
+
+        f_lat = make_fun_lat(phi)
+        r = sci.solve_ivp(fun=f_lat, y0=state_0, t_span=t_span, dense_output=True)
+        sol_lin_t = r.sol(t)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12, 6))
+        ax1.plot(t, sol_lin_t[0], label=r"$x(t)$ (lin.)")
+        ax1.grid(True)
+        ax1.legend(loc="lower right")
+        ax2.plot(t, sol_lin_t[2], label=r"$\theta(t)$ (lin.)")
+        ax2.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax2.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax2.grid(True)
+        ax2.legend(loc="lower right")
+        ax3.plot(t, phi(t, sol_lin_t), label=r"$\phi(t)$ (lin.)")
+        ax3.grid(True)
+        ax3.plot(t, 0.5 * np.pi * np.ones_like(t), "r--", label=r"$\pm\pi/2$")
+        ax3.plot(t, -0.5 * np.pi * np.ones_like(t), "r--")
+        ax3.set_xlabel(r"time $t$")
+        ax3.legend(loc="lower right")
+        return mo.center(fig)
+
+
+    lin_sim_42()
+    return (Koc,)
 
 
 @app.cell(hide_code=True)
@@ -1833,138 +2126,237 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    On teste les deux contrôleurs (pole placement et LQR) sur le vrai modèle **non-linéaire**. On part de $\theta_0 = \pi/4$ avec $f = Mg$ et on contrôle uniquement $\phi$.
-
-    C'est le vrai test : est-ce que la linéarisation tient la route quand les non-linéarités sont présentes ?
+    mo.md("""
+    ### 🔓 Solution
     """)
     return
 
 
-@app.cell
-def _(K_oc, K_pp, M, g, np, plt, redstart_solve):
-    def simulate_nonlinear(K_ctrl, label, t_end=40.0):
-        y_eq = 5.0  # arbitrary hover height
-        y0 = [0.0, 0.0, y_eq, 0.0, np.pi/4, 0.0]  # [x,vx,y,vy,theta,omega]
-        def f_phi_ctrl(t, state):
-            x, vx, y, vy, theta, omega = state
-            Ds = np.array([x - 0, vx - 0, theta - 0, omega - 0])
-            phi = float(-(K_ctrl @ Ds).flatten()[0])
-            phi = np.clip(phi, -np.pi/2 + 0.01, np.pi/2 - 0.01)
-            return np.array([M * g, phi])
-        sol = redstart_solve([0, t_end], y0, f_phi_ctrl)
-        t = np.linspace(0, t_end, 2000)
-        s = sol(t)
-        phi_t = np.array([f_phi_ctrl(ti, s[:, i])[1] for i, ti in enumerate(t)])
-        return t, s, phi_t
-
-    fig_nl, axes_nl = plt.subplots(2, 3, figsize=(15, 8))
-    for i, (K, name) in enumerate([(K_pp, "Pole Placement"), (K_oc, "LQR")]):
-        t_nl, s_nl, phi_nl = simulate_nonlinear(K, name)
-        axes_nl[i,0].plot(t_nl, s_nl[0]); axes_nl[i,0].set_title(f"{name}: $x(t)$"); axes_nl[i,0].grid(True)
-        axes_nl[i,1].plot(t_nl, s_nl[4]); axes_nl[i,1].set_title(f"{name}: $\\theta(t)$"); axes_nl[i,1].grid(True)
-        axes_nl[i,1].axhline(0, color='k', ls='--', lw=0.5)
-        axes_nl[i,2].plot(t_nl, phi_nl); axes_nl[i,2].set_title(f"{name}: $\\phi(t)$"); axes_nl[i,2].grid(True)
-        axes_nl[i,2].axhline(np.pi/2, color='r', ls='--')
-        axes_nl[i,2].axhline(-np.pi/2, color='r', ls='--')
-    plt.tight_layout(); plt.show()
-    return
-
-
-@app.cell
-def _(K_oc, K_pp, M, booster_anim, g, mo, np, redstart_solve, world):
-    ## Validation cell — code
-
-    def validate_controller(K_ctrl, label, t_end=40.0):
-        """Simule le modèle NON-LINÉAIRE avec le contrôleur K et renvoie une animation SVG."""
-        y_eq = 5.0
-        y0 = [0.0, 0.0, y_eq, 0.0, np.pi/4, 0.0]  # theta_0 = pi/4
-
-        def f_phi_ctrl(t, state):
-            x, vx, y, vy, theta, omega = state
-            Ds = np.array([x, vx, theta, omega])  # erreur par rapport à l'équilibre (0,0,0,0)
-            phi = float(-(K_ctrl @ Ds).flatten()[0])
-            phi = np.clip(phi, -np.pi/2 + 0.01, np.pi/2 - 0.01)  # saturation
-            return np.array([M * g, phi])
-
-        sol = redstart_solve([0, t_end], y0, f_phi_ctrl)
-
-        # Animation
-        anim = booster_anim(
-            lambda t: sol(t)[0],       # x(t)
-            lambda t: sol(t)[2],       # y(t)
-            lambda t: sol(t)[4],       # theta(t)
-            lambda t: M * g,           # f = Mg constant
-            lambda t: f_phi_ctrl(t, sol(t))[1],  # phi(t) du contrôleur
-            T=t_end
-        )
-        return anim
-
-    vb = [-5, 5, -2, 8]
-    mo.hstack([
-        mo.Html(world(vb, validate_controller(K_pp, "Pole Placement"))),
-        mo.Html(world(vb, validate_controller(K_oc, "LQR"))),
-    ], justify="space-around")
-
-    return
-
-
-@app.cell
-def _(A_lat, B_lat, M, booster_anim, g, mo, np, redstart_solve, world):
-    def _(A_lat, B_lat, M, booster_anim, g, mo, np, redstart_solve, world):
-        from scipy.linalg import solve_continuous_are
-        from scipy.signal import place_poles
-
-        def design_k_pp():
-            desired_poles = np.array([-0.5 + 0.1j, -0.5 - 0.1j, -0.3 + 0.1j, -0.3 - 0.1j])
-            return place_poles(A_lat, B_lat, desired_poles).gain_matrix
-
-        def design_k_oc():
-            q_final = np.diag([0.0, 0.0, 1 / (np.pi / 8),  2, 2.0])
-            r_final = np.array([[1 / (np.pi / 4),  2]])
-            p_mat = solve_continuous_are(A_lat, B_lat, q_final, r_final)
-            return np.linalg.inv(r_final) @ B_lat.T @ p_mat
-
-        def nonlinear_anim(k_mat, y0, t_final=20.0, x_ref=0.0):
-            def f_phi(t, state):
-                x, vx, y, vy, theta, omega = state
-                delta = np.array([x - x_ref, vx, theta, omega], dtype=float)
-                phi = float(-(k_mat @ delta).item())
-                phi = float(np.clip(phi, -np.pi / 2 + 1e-3, np.pi / 2 - 1e-3))
-                f = M * g
-                return np.array([f, phi], dtype=float)
-
-            sol = redstart_solve([0.0, t_final], y0, f_phi)
-            return booster_anim(
-                lambda t: sol(t)[0],
-                lambda t: sol(t)[2],
-                lambda t: sol(t)[4],
-                lambda t: f_phi(t, sol(t))[0],
-                lambda t: f_phi(t, sol(t))[1],
-                T=t_final,
+@app.cell(hide_code=True)
+def _(Kpp, M, booster_anim, g, mo, np, redstart_solve, world):
+    def _anim():
+        t_span = [0.0, 20.0]
+        y0 = [0.0, 0.0, 20.0, 0.0, 45 * np.pi/180.0, 0.0]
+        def f_phi(t, state):
+            x, dx, y, dy, theta, dtheta = state  
+            return np.array(
+                [M*g, -Kpp.dot([x, dx, theta, dtheta])]
             )
+        sol = redstart_solve(t_span, y0, f_phi)
+        x = lambda t: sol(t)[0]
+        y = lambda t: sol(t)[2]
+        theta = lambda t : sol(t)[4]
+        f = lambda t: f_phi(t, sol(t))[0]
+        phi = lambda t: f_phi(t, sol(t))[1]
+        return mo.Html(
+            world(
+                [-6, 6, -2, 22], 
+                booster_anim(x, y, theta, f, phi, T=t_span[1])
+            )
+        ).center()
 
-        y0 = [0.0, 0.0, 10.0, 0.0, np.pi / 4, 0.0]
-        k_pp = design_k_pp()
-        k_oc = design_k_oc()
-
-        view_box = [-5, 5, -2, 12]
-        mo.md("### Nonlinear validation: pole placement vs LQR")
-        mo.hstack(
-            [
-                mo.Html(world(view_box, nonlinear_anim(k_pp, y0, t_final=20.0))),
-                mo.Html(world(view_box, nonlinear_anim(k_oc, y0, t_final=20.0))),
-            ],
-            justify="space-around",
-        )
-        return
-
-    _(A_lat, B_lat, M, booster_anim, g, mo, np, redstart_solve, world)
+    _anim()
     return
 
 
-@app.cell
-def _():
+@app.cell(hide_code=True)
+def _(Koc, M, booster_anim, g, mo, np, redstart_solve, world):
+    def _anim():
+        t_span = [0.0, 20.0]
+        y0 = [0.0, 0.0, 20.0, 0.0, 45 * np.pi/180.0, 0.0]
+        def f_phi(t, state):
+            x, dx, y, dy, theta, dtheta = state  
+            return np.array(
+                [M*g, -Koc.dot([x, dx, theta, dtheta])]
+            )
+        sol = redstart_solve(t_span, y0, f_phi)
+        x = lambda t: sol(t)[0]
+        y = lambda t: sol(t)[2]
+        theta = lambda t : sol(t)[4]
+        f = lambda t: f_phi(t, sol(t))[0]
+        phi = lambda t: f_phi(t, sol(t))[1]
+        return mo.Html(
+            world(
+                [-6, 6, -2, 22], 
+                booster_anim(x, y, theta, f, phi, T=t_span[1])
+            )
+        ).center()
+
+    _anim()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Exact Linearization
+
+    Let
+    $$
+    R(\alpha) =
+    \begin{bmatrix} +\cos \alpha & -\sin \alpha \\ +\sin \alpha & -\cos \alpha
+    \end{bmatrix}
+    $$
+
+    Consider an auxiliary system which is meant to compute the force $(f_x, f_y)$ applied to the booster.
+
+    The inputs of the auxiliary system are
+
+    $$
+    v = (v_1, v_2) \in \mathbb{R}^2,
+    $$
+
+    its dynamics
+
+    $$
+    \ddot{z} = v_1 \qquad \text{ where } \qquad z \in \mathbb{R}
+    $$
+
+    and its output $(f_x, f_y) \in \mathbb{R}^2$ is given by
+
+    \[
+    \begin{bmatrix}
+    f_x \\
+    f_y
+    \end{bmatrix} = R\left(\theta - \frac{\pi}{2}\right)
+    \begin{bmatrix}
+    z - M\ell\dot{\theta}^2 / 6 \\
+    {M\ell v_2}/{6z}
+    \end{bmatrix}
+    \]
+
+    ⚠️ Note that the second component $f_y$ of the reactor force is undefined whenever $z=0$.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 Geometrical Interpretation
+
+
+    Consider the output $h$ of the original system
+
+    $$
+    h :=
+    \begin{bmatrix}
+    x - (\ell/6) \sin \theta \\
+    y + (\ell/6) \cos \theta
+    \end{bmatrix} \in \mathbb{R}^2
+    $$
+
+    Provide a geometrical interpretation of $h$ (for example, make a drawing).
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 First and Second-Order Derivatives
+
+    Compute $\dot{h}$ as a function of $\dot{x}$, $\dot{y}$, $\theta$ and $\dot{\theta}$ (and constants) and then $\ddot{h}$ as a function of $\theta$ and $z$ (and constants) when the auxiliary system is plugged in the booster.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 Third and Fourth-Order Derivatives
+
+    Compute the third derivative $h^{(3)}$ of $h$ as a function of $\theta$ and $z$ (and constants) and then the fourth derivative $h^{(4)}$ of $h$ with respect to time as a function of $\theta$, $\dot{\theta}$, $z$, $\dot{z}$, $v$ (and constants) when the auxiliary system is on.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 Exact Linearization
+
+    Show that with yet another auxiliary system with input $u=(u_1, u_2)$ and output $v$ fed into the previous one, we can achieve the dynamics
+
+    $$
+    h^{(4)} = u
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 State to Derivatives of the Output
+
+    Implement a function `Tr` of `x, dx, y, dy, theta, dtheta, z, dz` that returns `h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y`.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 Inversion
+
+
+    Assume for the sake of simplicity that $z<0$ at all times. Show that given the values of $h$, $\dot{h}$, $\ddot{h}$ and $h^{(3)}$, one can uniquely compute the booster state (the values of $x$, $\dot{x}$, $y$, $\dot{y}$, $\theta$, $\dot{\theta}$) and auxiliary system state (the values of $z$ and $\dot{z}$).
+
+    Implement the corresponding function `T_inv`.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 Admissible Path Computation
+
+    Implement a function
+
+    ```python
+    def compute(
+        x_0,
+        dx_0,
+        y_0,
+        dy_0,
+        theta_0,
+        dtheta_0,
+        z_0,
+        dz_0,
+        x_tf,
+        dx_tf,
+        y_tf,
+        dy_tf,
+        theta_tf,
+        dtheta_tf,
+        z_tf,
+        dz_tf,
+        tf,
+    ):
+        ...
+
+    ```
+
+    that returns a function `fun` such that `fun(t)` is a value of `x, dx, y, dy, theta, dtheta, z, dz, f, phi` at time `t` that match the initial and final values provided as arguments to `compute`.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## 🧩 Graphical Validation
+
+    Test your `compute` function with
+
+    - `(x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0) = (5.0, 0.0, 20.0, -1.0, -np.pi/8, 0.0, -M*g, 0.0`),
+    - `(x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf) = (0.0, 0.0, 2/3*l, 0.0,     0.0, 0.0, -M*g, 0.0`),
+    - `tf = 10.0`.
+
+    Make the graph of the relevant variables as a function of time, then make an animation out of the same result. Comment and iterate if necessary!
+    """)
     return
 
 
