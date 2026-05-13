@@ -2578,6 +2578,13 @@ def _(M, g, l, np):
 
         return h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y
 
+    return (Tr,)
+
+
+@app.cell
+def _(Tr):
+    #Vérification 
+    Tr(0,0,0,0,0,0,0,0)
     return
 
 
@@ -2591,6 +2598,96 @@ def _(mo):
 
     Implement the corresponding function `T_inv`.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On dispose de $h_x, h_y, \dot h_x, \dot h_y, \ddot h_x, \ddot h_y, h^{(3)}_x, h^{(3)}_y$ et on veut retrouver $x, \dot x, y, \dot y, \theta, \dot\theta, z, \dot z$.
+
+    Étape 1 — extraire $\theta$ et $z$ depuis $\ddot{h}$
+
+    On a :
+    $$\ddot{h}_x = \frac{z}{M}\sin\theta, \qquad \ddot{h}_y = -\frac{z}{M}\cos\theta - g$$
+
+    On isole d'abord $\frac{z}{M}\cos\theta$ :
+    $$\frac{z}{M}\cos\theta = -(\ddot{h}_y + g)$$
+
+    On a donc le vecteur $\frac{z}{M}(\sin\theta, -\cos\theta)^T = (\ddot h_x,\, \ddot h_y + g)^T$, dont la norme donne $|z|/M$ :
+
+    $$\frac{|z|}{M} = \sqrt{\ddot{h}_x^2 + (\ddot{h}_y + g)^2}$$
+
+    Comme on suppose $z < 0$, on a $|z| = -z$, donc :
+
+    $$\boxed{z = -M\sqrt{\ddot{h}_x^2 + (\ddot{h}_y + g)^2}}$$
+
+    Puis l'angle $\theta$ s'obtient par :
+    $$\frac{z}{M}\sin\theta = \ddot{h}_x, \qquad \frac{z}{M}\cos\theta = -(\ddot{h}_y+g)$$
+
+    Comme $z < 0$, on a $\frac{z}{M} < 0$, donc :
+    $$\sin\theta = \frac{\ddot{h}_x}{z/M} = \frac{M\ddot{h}_x}{z}, \qquad \cos\theta = \frac{-(\ddot{h}_y+g)}{z/M} = \frac{-M(\ddot{h}_y+g)}{z}$$
+
+    $$\boxed{\theta = \mathrm{atan2}\!\left(\frac{M\ddot{h}_x}{z},\, \frac{-M(\ddot{h}_y+g)}{z}\right) = \mathrm{atan2}(-\ddot{h}_x,\, \ddot{h}_y+g)}$$
+
+    où la simplification du facteur $M/z$ (négatif) retourne le quadrant correct via `atan2`.
+
+    Étape 2 — extraire $\dot\theta$ et $\dot z$ depuis $h^{(3)}$
+
+    On a :
+    $$h^{(3)} = \frac{\dot{z}}{M}\begin{pmatrix}\sin\theta\\-\cos\theta\end{pmatrix} + \frac{z\dot\theta}{M}\begin{pmatrix}\cos\theta\\\sin\theta\end{pmatrix}$$
+
+    C'est un système $2\times 2$ en $(\dot z, \dot\theta)$. En projetant sur les deux vecteurs directeurs orthogonaux $(\sin\theta, -\cos\theta)^T$ et $(\cos\theta, \sin\theta)^T$ :
+
+    **Projection sur $(\sin\theta, -\cos\theta)^T$ :**
+    $$h^{(3)}_x\sin\theta - h^{(3)}_y\cos\theta = \frac{\dot{z}}{M}\underbrace{(\sin^2\theta+\cos^2\theta)}_{=1} + \frac{z\dot\theta}{M}\underbrace{(\cos\theta\sin\theta - \sin\theta\cos\theta)}_{=0}$$
+
+    $$\boxed{\dot{z} = M\left(h^{(3)}_x\sin\theta - h^{(3)}_y\cos\theta\right)}$$
+
+    **Projection sur $(\cos\theta, \sin\theta)^T$ :**
+    $$h^{(3)}_x\cos\theta + h^{(3)}_y\sin\theta = \frac{\dot{z}}{M}\underbrace{(\sin\theta\cos\theta - \cos\theta\sin\theta)}_{=0} + \frac{z\dot\theta}{M}\underbrace{(\cos^2\theta+\sin^2\theta)}_{=1}$$
+
+    $$\boxed{\dot\theta = \frac{M}{z}\left(h^{(3)}_x\cos\theta + h^{(3)}_y\sin\theta\right)}$$
+
+    Étape 3 — extraire $x, y$ depuis $h$
+
+    Directement depuis la définition de $h$ :
+
+    $$\boxed{x = h_x + \frac{\ell}{6}\sin\theta, \qquad y = h_y - \frac{\ell}{6}\cos\theta}$$
+
+    Étape 4 — extraire $\dot x, \dot y$ depuis $\dot h$
+
+    Depuis $\dot h = (\dot x - \frac{\ell}{6}\cos\theta\,\dot\theta,\; \dot y - \frac{\ell}{6}\sin\theta\,\dot\theta)^T$ :
+
+    $$\boxed{\dot x = \dot h_x + \frac{\ell}{6}\cos\theta\,\dot\theta, \qquad \dot y = \dot h_y + \frac{\ell}{6}\sin\theta\,\dot\theta}$$
+    """)
+    return
+
+
+@app.cell
+def _(M, g, l, np):
+    def T_inv(h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y):
+        # Step 1 — z and theta from d2h
+        z = -M * np.sqrt(d2h_x**2 + (d2h_y + g)**2)   # z < 0 by assumption
+
+        theta = np.arctan2(-d2h_x, d2h_y + g)
+        c = np.cos(theta)
+        s = np.sin(theta)
+
+        # Step 2 — dz and dtheta from d3h (projection onto orthogonal basis)
+        dz     = M * (d3h_x * s - d3h_y * c)
+        dtheta = (M / z) * (d3h_x * c + d3h_y * s)
+
+        # Step 3 — x, y from h
+        x = h_x + (l/6) * s
+        y = h_y - (l/6) * c
+
+        # Step 4 — dx, dy from dh
+        dx = dh_x + (l/6) * c * dtheta
+        dy = dh_y + (l/6) * s * dtheta
+
+        return x, dx, y, dy, theta, dtheta, z, dz
+
     return
 
 
