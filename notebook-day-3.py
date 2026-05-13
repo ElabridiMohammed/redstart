@@ -2549,6 +2549,41 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Étant donné l'état $(x, v_x, y, v_y, \theta, \omega, z, \dot{z})$, la transformation $\text{Tr}$ retourne $(h, \dot{h}, \ddot{h}, h^{(3)})$ :
+
+    $$h_x = x - \frac{\ell}{6}\sin\theta, \qquad h_y = y + \frac{\ell}{6}\cos\theta$$
+
+    $$\dot{h}_x = v_x - \frac{\ell\omega}{6}\cos\theta, \qquad \dot{h}_y = v_y - \frac{\ell\omega}{6}\sin\theta$$
+
+    $$\ddot{h}_x = \frac{z\sin\theta}{M}, \qquad \ddot{h}_y = \frac{-z\cos\theta}{M} - g$$
+
+    $$h^{(3)}_x = \frac{\dot{z}\sin\theta + z\omega\cos\theta}{M}, \qquad h^{(3)}_y = \frac{-\dot{z}\cos\theta + z\omega\sin\theta}{M}$$
+    """)
+    return
+
+
+@app.cell
+def _(M, g, l, np):
+    def Tr(x, dx, y, dy, theta, dtheta, z, dz):
+        c = np.cos(theta)
+        s = np.sin(theta)
+        h_x  = x - (l/6) * s
+        h_y  = y + (l/6) * c
+        dh_x = dx - (l/6) * c * dtheta
+        dh_y = dy - (l/6) * s * dtheta
+        d2h_x =  (z/M) * s
+        d2h_y = -(z/M) * c - g
+        d3h_x =  (dz/M) * s + (z/M) * c * dtheta
+        d3h_y = -(dz/M) * c + (z/M) * s * dtheta
+
+        return h_x, h_y, dh_x, dh_y, d2h_x, d2h_y, d3h_x, d3h_y
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Inversion
 
 
