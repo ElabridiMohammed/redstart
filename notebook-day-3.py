@@ -2060,15 +2060,15 @@ def _(mo):
 def _(A_lat, B_lat, make_fun_lat, mo, np, plt, sci, scipy):
     Q = np.eye(4,4)
     print("Q:", Q)
-    R = 100 * np.eye(1)
-    print("R:", R)
+    _R = 100 * np.eye(1)
+    print("R:", _R)
     Pi = scipy.linalg.solve_continuous_are(
         a=A_lat, 
         b=B_lat, 
         q=Q, 
-        r=R
+        r=_R
     )
-    Koc = (np.linalg.inv(R) @ B_lat.T @ Pi).squeeze()
+    Koc = (np.linalg.inv(_R) @ B_lat.T @ Pi).squeeze()
 
     def lin_sim_42():
         K = Koc
@@ -3136,7 +3136,6 @@ def _(M, compute, g, l, np, plt, tf):
     ax2.set_aspect('equal', adjustable='datalim')
     plt.tight_layout()
     plt.show()
-
 
     return f_t, phi_fixed, sp, t_vals
 
