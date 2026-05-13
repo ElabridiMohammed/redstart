@@ -2588,6 +2588,12 @@ def _(Tr):
     return
 
 
+@app.cell
+def _(Tr):
+    Tr(1.0, 2.0, 3.0, 4.0, 0.1, 0.2, -0.3, -0.4)
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -2688,6 +2694,12 @@ def _(M, g, l, np):
 
         return x, dx, y, dy, theta, dtheta, z, dz
 
+    return (T_inv,)
+
+
+@app.cell
+def _(T_inv, Tr):
+    T_inv(*Tr(1.0, 2.0, 3.0, 4.0, 0.1, 0.2, -0.3, -0.4))
     return
 
 
@@ -2730,6 +2742,274 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    On veut faire atterrir le booster. On connaît son état de départ (position, vitesse, angle…) et son état d'arrivée (posé, droit, immobile).
+
+    La difficulté, c'est que le booster est un système physique non linéaire — ses équations de mouvement sont compliquées, avec des $\sin$, des $\cos$, des couplages entre la rotation et la translation. Planifier une trajectoire directement dans l'espace physique $(x, y, \theta)$ est un cauchemar.
+
+    On a montré qu'il existe un point particulier du booster, situé à $\ell/6$ au-dessus du centre de masse, dont la position $(h_x, h_y)$ obéit à une dynamique très simple :
+
+    $$h^{(4)}(t) = u(t)$$
+
+    La fonction `Tr` calcule, à partir de l'état physique du booster, les valeurs de $h$ et ses trois premières dérivées :
+
+    $$\text{Tr}(x, \dot x, y, \dot y, \theta, \omega, z, \dot z) \;\longmapsto\; \big(h_x,\, h_y,\, \dot h_x,\, \dot h_y,\, \ddot h_x,\, \ddot h_y,\, h^{(3)}_x,\, h^{(3)}_y\big)$$
+
+    On obtient donc **8 valeurs à $t=0$** et **8 valeurs à $t=t_f$**, soit **16 conditions aux limites** au total (8 par composante de $h$).
+
+    Pour que la trajectoire soit physiquement réalisable (vitesse, accélération ...), il faut imposer $h$, $\dot h$, $\ddot h$ et $h^{(3)}$ aux deux extrémités.
+
+    On cherche une fonction $h_x(t)$ qui :
+    - vaut $h_{x,0}$ à $t=0$
+    - a la même dérivée première, deuxième et troisième qu'à l'état initial
+    - vaut $h_{x,f}$ à $t=t_f$
+    - a la même dérivée première, deuxième et troisième qu'à l'état final
+
+    C'est **8 conditions**. Un polynôme de degré 7 a exactement **8 coefficients libres** :
+
+    $$h_x(t) = c_0 + c_1 t + c_2 t^2 + c_3 t^3 + c_4 t^4 + c_5 t^5 + c_6 t^6 + c_7 t^7$$
+
+    8 inconnues, 8 équations → système linéaire, solution unique.
+
+
+    Au lieu de travailler avec le temps $t \in [0, t_f]$, on normalise : $s = t/t_f \in [0, 1]$.
+
+    Pour des raisons numériques. Si $t_f = 10$ secondes, les puissances $t^7 = 10^7 = 10\,000\,000$ deviennent énormes. Avec $s \in [0,1]$, toutes les puissances restent entre 0 et 1.
+
+    La conversion des dérivées est immédiate :
+
+    $$\frac{d}{dt} = \frac{1}{t_f}\frac{d}{ds}, \quad \frac{d^2}{dt^2} = \frac{1}{t_f^2}\frac{d^2}{ds^2}, \quad \frac{d^3}{dt^3} = \frac{1}{t_f^3}\frac{d^3}{ds^3}$$
+
+
+    On resoud Le système linéaire :
+
+    Les 4 conditions à $s = 0$ donnent directement les premiers coefficients :
+
+    $$p(0) = c_0 \implies c_0 = b_0[0]$$
+    $$p'(0) = c_1 \implies c_1 = b_0[1]$$
+    $$p''(0) = 2c_2 \implies c_2 = b_0[2]/2$$
+    $$p'''(0) = 6c_3 \implies c_3 = b_0[3]/6$$
+
+    Les 4 conditions à $s = 1$ donnent un système $4 \times 4$ en $(c_4, c_5, c_6, c_7)$ :
+
+    $$\begin{pmatrix} 1 & 1 & 1 & 1 \\ 4 & 5 & 6 & 7 \\ 12 & 20 & 30 & 42 \\ 24 & 60 & 120 & 210 \end{pmatrix} \begin{pmatrix} c_4 \\ c_5 \\ c_6 \\ c_7 \end{pmatrix} = \begin{pmatrix} b_1[0] - (c_0+c_1+c_2+c_3) \\ b_1[1] - (c_1+2c_2+3c_3) \\ b_1[2] - (2c_2+6c_3) \\ b_1[3] - 6c_3 \end{pmatrix}$$
+
+    Les colonnes de la matrice viennent des dérivées de $s^4, s^5, s^6, s^7$ évaluées en $s=1$ :
+
+    | Polynôme | $p(1)$ | $p'(1)$ | $p''(1)$ | $p'''(1)$ |
+    |---|---|---|---|---|
+    | $s^4$ | 1 | 4 | 12 | 24 |
+    | $s^5$ | 1 | 5 | 20 | 60 |
+    | $s^6$ | 1 | 6 | 30 | 120 |
+    | $s^7$ | 1 | 7 | 42 | 210 |
+
+    Cette matrice est toujours inversible (c'est une matrice de type Vandermonde des dérivées), donc `np.linalg.solve` donne une solution unique.
+
+
+    On Évaluer le polynôme et ses dérivées avec `np.polyder`
+
+    On a planifié le chemin de $h(t)$ dans l'espace plat. Maintenant, à chaque instant $t$, on connaît $(h, \dot h, \ddot h, h^{(3)})$. La fonction `T_inv` invertit la transformation `Tr` pour retrouver l'état physique $(x, \dot x, y, \dot y, \theta, \omega, z, \dot z)$.
+
+    On a le chemin, mais on veut savoir **quelle poussée** et **quel angle de gicleur** produisent ce chemin.
+
+    On a montré que :
+
+    $$h^{(4)} = \frac{v_1}{M}\mathbf{n} + \frac{v_2}{M}\mathbf{t} + \text{termes non linéaires}$$
+
+    où $\mathbf{n} = (\sin\theta, -\cos\theta)$ et $\mathbf{t} = (\cos\theta, \sin\theta)$.
+
+    On les soustrait de $h^{(4)}$ (que l'on connaît depuis le polynôme), puis on projette sur $(\mathbf{n}, \mathbf{t})$ pour isoler $v_1$ et $v_2$ :
+
+    $$\text{rhs} = h^{(4)} - \text{termes non linéaires}$$
+
+    $$v_1 = M\,(\text{rhs}\cdot\mathbf{n}) = M\,(\text{rhs}_x \sin\theta - \text{rhs}_y \cos\theta)$$
+
+    $$v_2 = M\,(\text{rhs}\cdot\mathbf{t}) = M\,(\text{rhs}_x \cos\theta + \text{rhs}_y \sin\theta)$$
+
+    Puis il faut récupérer $(f_x, f_y)$ depuis le premier système auxiliaire
+
+    Le premier système auxiliaire définit les composantes de force :
+
+    $$\begin{pmatrix}f_x \\ f_y\end{pmatrix} = R(\theta - \pi/2)\begin{pmatrix}z - \frac{M\ell\omega^2}{6} \\ \frac{M\ell v_2}{6z}\end{pmatrix} = \begin{pmatrix}\sin\theta & \cos\theta \\ -\cos\theta & \sin\theta\end{pmatrix}\begin{pmatrix}f_1^{\text{body}} \\ f_2^{\text{body}}\end{pmatrix}$$
+
+
+    Puis la rotation donne $(f_x, f_y)$ dans le repère monde.
+
+    La norme de $(f_x, f_y)$ donne la poussée totale :
+
+    $$f = \sqrt{f_x^2 + f_y^2}$$
+
+    L'angle de gicleur $\phi$ est l'angle entre la force et l'axe du booster :
+
+    $$\phi = \arctan2(-f_x, f_y) + \phi$$
+    """)
+    return
+
+
+@app.cell
+def _(M, T_inv, Tr, l, np):
+    def compute(
+        x_0, dx_0, y_0, dy_0, theta_0, dtheta_0, z_0, dz_0,
+        x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf,
+        tf,
+    ):
+
+        h_0  = Tr(x_0,  dx_0,  y_0,  dy_0,  theta_0,  dtheta_0,  z_0,  dz_0)
+        h_tf = Tr(x_tf, dx_tf, y_tf, dy_tf, theta_tf, dtheta_tf, z_tf, dz_tf)
+
+        (hx0,  hy0,
+         dhx0,  dhy0,
+         d2hx0,  d2hy0,
+         d3hx0,  d3hy0)  = h_0
+
+        (hxf,  hyf,
+         dhxf,  dhyf,
+         d2hxf,  d2hyf,
+         d3hxf,  d3hyf) = h_tf
+
+        # 2. degree-7 polynomial fit (one per component)
+        # We work on the normalised time s = t/tf ∈ [0,1] to keep the Vandermonde
+        # matrix well-conditioned, then convert derivatives accordingly.
+        #
+        # If p(s) is the normalised poly, then:
+        #   d/dt   = (1/tf)   d/ds
+        #   d2/dt2 = (1/tf^2) d2/ds2
+        #   d3/dt3 = (1/tf^3) d3/ds3
+
+        def fit_poly7(a0, da0, d2a0, d3a0, af, daf, d2af, d3af, tf):
+            """
+            Return coefficients c of degree-7 polynomial p(s) = sum c[k] s^k
+            satisfying the 8 boundary conditions at s=0 and s=1.
+            Derivatives are w.r.t. original time t (converted internally).
+            """
+            # convert to s-derivatives
+            b0 = [a0,
+                  da0   * tf,
+                  d2a0  * tf**2,
+                  d3a0  * tf**3]
+            b1 = [af,
+                  daf   * tf,
+                  d2af  * tf**2,
+                  d3af  * tf**3]
+
+            # Vandermonde-style matrix for p(0), p'(0), p''(0), p'''(0)
+            # p(s)   = c0 + c1 s + c2 s^2 + ... + c7 s^7
+            # at s=0: only the lowest-order terms survive
+            # at s=1: sum of all coefficients and their derivatives
+
+            # Conditions at s=0:
+            #   p(0)   = c0
+            #   p'(0)  = c1
+            #   p''(0) = 2 c2
+            #   p'''(0)= 6 c3
+            # => c0,c1,c2,c3 determined immediately
+            c0 = b0[0]
+            c1 = b0[1]
+            c2 = b0[2] / 2
+            c3 = b0[3] / 6
+
+            # Conditions at s=1 give 4 equations in (c4,c5,c6,c7):
+            # p(1)   = c0+c1+c2+c3 + c4+c5+c6+c7                  = b1[0]
+            # p'(1)  = c1+2c2+3c3  + 4c4+5c5+6c6+7c7              = b1[1]
+            # p''(1) = 2c2+6c3     + 12c4+20c5+30c6+42c7           = b1[2]
+            # p'''(1)= 6c3         + 24c4+60c5+120c6+210c7         = b1[3]
+
+            known0 = c0 + c1 + c2 + c3
+            known1 = c1 + 2*c2 + 3*c3
+            known2 = 2*c2 + 6*c3
+            known3 = 6*c3
+
+            rhs = np.array([
+                b1[0] - known0,
+                b1[1] - known1,
+                b1[2] - known2,
+                b1[3] - known3,
+            ])
+
+            A = np.array([
+                [1,   1,   1,   1  ],
+                [4,   5,   6,   7  ],
+                [12,  20,  30,  42 ],
+                [24,  60,  120, 210],
+            ])
+
+            c4567 = np.linalg.solve(A, rhs)
+            return np.array([c0, c1, c2, c3, *c4567])
+
+        cx = fit_poly7(hx0,  dhx0,  d2hx0,  d3hx0,
+                       hxf,  dhxf,  d2hxf,  d3hxf,  tf)
+
+        cy = fit_poly7(hy0,  dhy0,  d2hy0,  d3hy0,
+                       hyf,  dhyf,  d2hyf,  d3hyf,  tf)
+
+        # 3. polynomial evaluation helpers
+        def poly_derivs(c, s, tf):
+            """
+            Given normalised coefficients c and s = t/tf,
+            return p, p', p'', p''', p'''' w.r.t. original time t.
+            """
+            # build derivative coefficient arrays w.r.t. s
+            c1 = np.polyder(c[::-1])[::-1]   # d/ds,   degree 6
+            c2 = np.polyder(c1[::-1])[::-1]  # d2/ds2, degree 5
+            c3 = np.polyder(c2[::-1])[::-1]  # d3/ds3, degree 4
+            c4 = np.polyder(c3[::-1])[::-1]  # d4/ds4, degree 3
+
+            p   = np.polyval(c[::-1],  s)
+            dp  = np.polyval(c1[::-1], s) / tf
+            d2p = np.polyval(c2[::-1], s) / tf**2
+            d3p = np.polyval(c3[::-1], s) / tf**3
+            d4p = np.polyval(c4[::-1], s) / tf**4
+
+            return p, dp, d2p, d3p, d4p
+
+        # 4. trajectory function
+        def fun(t):
+            s = t / tf
+
+            hx,  dhx,  d2hx,  d3hx,  d4hx  = poly_derivs(cx, s, tf)
+            hy,  dhy,  d2hy,  d3hy,  d4hy  = poly_derivs(cy, s, tf)
+
+            # recover full state
+            x, dx, y, dy, theta, dtheta, z, dz = T_inv(
+                hx, hy, dhx, dhy, d2hx, d2hy, d3hx, d3hy
+            )
+
+            # recover v from d4h = P(theta) v/M + nonlinear terms  (see h^(4) formula)
+            # => v = M P^{-1} (d4h - nonlinear)
+            # P(theta)^{-1} = [[sin, -cos],[cos, sin]]
+            c_t, s_t = np.cos(theta), np.sin(theta)
+
+            nl_x = (2*dz*dtheta/M)*c_t - (z*dtheta**2/M)*s_t
+            nl_y = (2*dz*dtheta/M)*s_t + (z*dtheta**2/M)*c_t
+
+            rhs_x = d4hx - nl_x
+            rhs_y = d4hy - nl_y
+
+            # P^{-1} = [[s_t, -c_t],[c_t, s_t]]
+            v1 = M * ( s_t * rhs_x - c_t * rhs_y)
+            v2 = M * ( c_t * rhs_x + s_t * rhs_y)
+
+            # recover (fx, fy) from the first auxiliary system
+            # [fx, fy] = R(theta-pi/2) @ [z - Ml dtheta^2/6, Ml v2/(6z)]
+            f1_body = z - (M*l/6)*dtheta**2
+            f2_body = (M*l*v2) / (6*z)
+
+            fx =  s_t * f1_body + c_t * f2_body
+            fy = -c_t * f1_body + s_t * f2_body
+
+            # total thrust magnitude and gimbal angle
+            f   = np.sqrt(fx**2 + fy**2)
+            phi = np.arctan2(-fx, +fy) - theta   # angle of thrust w.r.t. -y body axis
+
+            return x, dx, y, dy, theta, dtheta, z, dz, f, phi
+
+        return fun
+
+    return (compute,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Graphical Validation
 
     Test your `compute` function with
@@ -2740,6 +3020,264 @@ def _(mo):
 
     Make the graph of the relevant variables as a function of time, then make an animation out of the same result. Comment and iterate if necessary!
     """)
+    return
+
+
+@app.cell
+def _(M, compute, g, l, np):
+    tf = 10
+    fun = compute(5.0, 0.0, 20.0, -1.0, -np.pi/8, 0.0, -M*g, 0.0, 0.0, 0.0, 2/3*l, 0.0, 0.0, 0.0, -M*g, 0.0, tf)
+    return fun, tf
+
+
+@app.cell
+def _(booster_anim, fun, mo, tf, world):
+    def _anim():
+        t_span = [0.0, tf]
+        x = lambda t: fun(t)[0]
+        y = lambda t: fun(t)[2]
+        theta = lambda t : fun(t)[4]
+        f = lambda t: fun(t)[-2]
+        phi = lambda t: fun(t)[-1]
+        return mo.Html(
+            world(
+                [-20, 20, -5, 20], 
+                booster_anim(x, y, theta, f, phi, T=t_span[1])
+            )
+        ).center()
+
+    _anim()
+    return
+
+
+@app.cell
+def _(M, compute, g, l, np, plt, tf):
+    import matplotlib.gridspec as gridspec
+    from matplotlib.patches import FancyArrowPatch
+    import matplotlib.patheffects as pe
+
+    IC = dict(x_0=5.0,   dx_0=0.0,  y_0=20.0,  dy_0=-1.0,
+              theta_0=-np.pi/8, dtheta_0=0.0, z_0=-M*g, dz_0=0.0)
+    FC = dict(x_tf=0.0,  dx_tf=0.0, y_tf=2/3*l, dy_tf=0.0,
+              theta_tf=0.0, dtheta_tf=0.0, z_tf=-M*g, dz_tf=0.0)
+
+    traj = compute(**IC, **FC, tf=tf)
+
+    t_vals = np.linspace(0, tf, 600)
+    R = np.array([traj(t) for t in t_vals])
+    x_t, dx_t, y_t, dy_t   = R[:,0], R[:,1], R[:,2], R[:,3]
+    theta_t, omega_t        = R[:,4], R[:,5]
+    z_t, dz_t_arr          = R[:,6], R[:,7]
+    f_t, phi_t             = R[:,8], R[:,9]
+
+    fx_t = M * np.array([np.gradient(np.gradient(R[:,0], t_vals), t_vals)[i]
+                          for i in range(len(t_vals))])  # d2x/dt2 * M
+    fy_t = M * (np.gradient(np.gradient(R[:,2], t_vals), t_vals)
+                + g * np.ones(len(t_vals)))
+
+    phi_fixed = np.arctan2(-fx_t, fy_t) - theta_t
+
+    fig2, ax2 = plt.subplots(figsize=(7, 11))
+    fig2.patch.set_facecolor('#0f0f1a')
+    ax2.set_facecolor('#161629')
+
+    # Ground
+    ax2.axhline(0, color='#444', lw=1.5)
+    ax2.fill_between([-1, 7], -0.3, 0, color='#2d2d2d', zorder=1)
+
+    # CoM path
+    sc = ax2.scatter(x_t, y_t, c=t_vals, cmap='plasma', s=8, zorder=3, alpha=0.9)
+    cbar = plt.colorbar(sc, ax=ax2, fraction=0.03, pad=0.02)
+    cbar.set_label('t [s]', color='white', fontsize=9)
+    cbar.ax.yaxis.set_tick_params(color='white', labelcolor='white')
+
+    # h path
+    h_x = x_t - (l/6)*np.sin(theta_t)
+    h_y = y_t + (l/6)*np.cos(theta_t)
+    ax2.plot(h_x, h_y, color='#00d4ff', lw=1.2, ls='--', alpha=0.5,
+             label=r'$h(t)$ — flat output path', zorder=2)
+
+    # Booster snapshots at a few instants
+    snap_times = np.linspace(0, tf, 9)
+    for ts in snap_times:
+        rs = traj(ts)
+        xs, _, ys = rs[0], rs[1], rs[2]
+        ths = rs[4]
+        # booster body: line from bottom to top
+        half = l / 2
+        bx0, by0 = xs + half*np.sin(ths),  ys - half*np.cos(ths)   # bottom (nozzle)
+        bx1, by1 = xs - half*np.sin(ths),  ys + half*np.cos(ths)   # top
+        alpha_snap = 0.3 + 0.5*(ts/tf)
+        ax2.plot([bx0, bx1], [by0, by1], color='#51cf66',
+                 lw=3, alpha=alpha_snap, solid_capstyle='round', zorder=4)
+        # CoM dot
+        ax2.plot(xs, ys, 'o', color='white', ms=4, zorder=5, alpha=alpha_snap)
+        # h dot
+        hxs = xs - (l/6)*np.sin(ths)
+        hys = ys + (l/6)*np.cos(ths)
+        ax2.plot(hxs, hys, 's', color='#00d4ff', ms=3, zorder=5, alpha=alpha_snap)
+
+    # Start / End markers
+    ax2.plot(IC['x_0'], IC['y_0'], 'o', color='#ffd43b', ms=12,
+             zorder=6, label=f"Start ({IC['x_0']}, {IC['y_0']})")
+    ax2.plot(FC['x_tf'], FC['y_tf'], '*', color='#ff6b6b', ms=14,
+             zorder=6, label=f"Target ({FC['x_tf']}, {FC['y_tf']:.3f})")
+
+    ax2.set_xlim(-1.5, 7)
+    ax2.set_ylim(-0.5, 22)
+    ax2.set_xlabel('x [m]', color='white', fontsize=11)
+    ax2.set_ylabel('y [m]', color='white', fontsize=11)
+    ax2.set_title('Booster Trajectory',
+                  color='white', fontsize=12, fontweight='bold')
+    ax2.tick_params(colors='#aaa', labelsize=9)
+    for sp in ax2.spines.values(): sp.set_edgecolor('#333')
+    ax2.legend(facecolor='#222', labelcolor='white', edgecolor='#444',
+               fontsize=9, loc='upper right')
+    ax2.set_aspect('equal', adjustable='datalim')
+    plt.tight_layout()
+    plt.show()
+
+
+    return f_t, phi_fixed, sp, t_vals
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Le chemin du centre de masse (colorié par le temps) montre une courbe douce du point de départ $(5, 20)$ vers la cible $(0, 1.33)$. En pointillés, on voit le chemin de la **sortie plate** $h(t)$  ce petit point situé à $\ell/6$ au-dessus du centre de masse, dont on a planifié le mouvement par le polynôme. Les deux chemins sont proches mais distincts, car $h$ et le CoM sont décalés d'une distance $\ell/6$ dans la direction de l'axe du booster.
+
+    Les "bâtons" verts représentent le booster à différents instants. On voit clairement la rotation : le booster se couche vers $t \approx 2.5$ s, puis se redresse progressivement. À l'atterrissage, il est vertical exactement comme demandé.
+    """)
+    return
+
+
+@app.cell
+def _(M, f_t, g, np, phi_fixed, plt, sp, t_vals):
+    fig3, (a1, a2) = plt.subplots(1, 2, figsize=(12, 4))
+    fig3.patch.set_facecolor('#0f0f1a')
+    for ax in (a1, a2):
+        ax.set_facecolor('#161629')
+        ax.tick_params(colors='#888', labelsize=8)
+        for _sp in ax.spines.values(): sp.set_edgecolor('#333')
+
+    a1.plot(t_vals, f_t, color='#ff922b', lw=2.2)
+    a1.axhline(M*g, color='white', ls='--', lw=1, alpha=0.5, label=f'Mg = {M*g}')
+    a1.set_title(r'Thrust $f(t)$', color='white', fontsize=11)
+    a1.set_xlabel('t [s]', color='#888'); a1.set_ylabel('N', color='#888')
+    a1.legend(facecolor='#222', labelcolor='white', edgecolor='#444', fontsize=9)
+
+    a2.plot(t_vals, np.degrees(phi_fixed), color='#cc5de8', lw=2.2, label=r'$\phi$ (fixed)')
+    a2.axhline( 90, color='red',   ls='--', lw=1, alpha=0.5, label='±90° limit')
+    a2.axhline(-90, color='red',   ls='--', lw=1, alpha=0.5)
+    a2.axhline(  0, color='white', ls=':',  lw=0.6, alpha=0.3)
+    a2.set_title(r'Gimbal angle $\phi(t)$ [°]', color='white', fontsize=11)
+    a2.set_xlabel('t [s]', color='#888'); a2.set_ylabel('degrees', color='#888')
+    a2.legend(facecolor='#222', labelcolor='white', edgecolor='#444', fontsize=9)
+
+    fig3.suptitle('Control Inputs', color='white', fontsize=13, fontweight='bold')
+    plt.tight_layout()
+    plt.show()
+    return
+
+
+@app.cell
+def _(fun, np, plt, tf):
+    x_init     = 5 
+    y_init     = 20
+    theta_init =-np.pi/8
+
+
+
+    def _():
+        # 1. Data Generation
+        t_eval = np.linspace(0, tf, 500)
+        results = np.array([fun(t) for t in t_eval])
+
+        # Extracting the 10 variables (Transpose to get columns)
+        x, dx, y, dy, theta, dtheta, z, dz, f, phi = results.T
+
+        # 2. Static Graphs of Relevant Variables
+        fig, axs = plt.subplots(3, 2, figsize=(12, 12))
+        plt.subplots_adjust(hspace=0.4, wspace=0.3)
+
+        # Trajectory components
+        axs[0, 0].plot(t_eval, x, label='$x(t)$', color='blue')
+        axs[0, 0].plot(t_eval, y, label='$y(t)$', color='green')
+        axs[0, 0].set_title("Positions vs Time")
+        axs[0, 0].legend()
+        axs[0, 0].grid(True)
+
+        # Velocities
+        axs[0, 1].plot(t_eval, dx, label='$\dot{x}$', linestyle='--')
+        axs[0, 1].plot(t_eval, dy, label='$\dot{y}$', linestyle='--')
+        axs[0, 1].set_title("Velocities vs Time")
+        axs[0, 1].legend()
+        axs[0, 1].grid(True)
+
+        # Orientation (Theta)
+        axs[1, 0].plot(t_eval, np.degrees(theta), color='purple')
+        axs[1, 0].set_title("Angle $\\theta$ (degrees) vs Time")
+        axs[1, 0].set_ylabel("Degrees")
+        axs[1, 0].grid(True)
+
+        # Command Angle (Phi)
+        axs[1, 1].plot(t_eval, np.degrees(phi), color='orange')
+        axs[1, 1].set_title("Control Angle $\\phi$ (degrees) vs Time")
+        axs[1, 1].grid(True)
+
+        # Force/Thrust (f)
+        axs[2, 0].plot(t_eval, f, color='brown')
+        axs[2, 0].set_title("Thrust Force $f$ vs Time")
+        axs[2, 0].grid(True)
+
+        # Phase Space (X-Z trajectory)
+        axs[2, 1].plot(x, y)
+        axs[2, 1].set_title("Vertical Profile (Y-X Plane)")
+        axs[2, 1].set_xlabel("y")
+        axs[2, 1].set_ylabel("x")
+        axs[2, 1].grid(True)
+        return plt.show()
+
+
+    _()
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Ce notebook a construit, de zéro, une trajectoire d'atterrissage complète pour un booster réutilisable. On est partis des équations de la physique, on a trouvé une transformation algébrique (la sortie plate $h$) qui simplifie radicalement le problème, et on a planifié dans cet espace simplifié.
+
+    Le résultat : une trajectoire calculée en une fraction de seconde, valide pour des grandes inclinaisons, avec des conditions aux limites respectées à l'erreur numérique près.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Conclusion du notebook
+
+    Ce projet nous a emmenés d'une feuille blanche jusqu'à un système de contrôle complet pour un booster en atterrissage.
+
+    On a commencé par modéliser physiquement le système : forces, couples, centre de masse, moment d'inertie. On a simulé le comportement non linéaire libre. Puis on a linéarisé autour de l'équilibre pour concevoir des contrôleurs classiques.
+
+    On a transformé un système non linéaire couplé en deux intégrateurs quadruples indépendants. Cette transformation est exacte pas une approximation. Elle a rendu la planification de trajectoire triviale
+
+    Le résultat sur les graphes parle de lui-même : une trajectoire fluide, physiquement cohérente, avec des conditions aux limites respectées.
+
+    C'est ça, la puissance de la théorie du contrôle moderne.
+    """)
+    return
+
+
+@app.cell
+def _():
     return
 
 
